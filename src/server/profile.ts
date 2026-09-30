@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import { requireSession } from "./auth";
-import { must } from "./db";
+import { must, mustOk } from "./db";
 import { userClient } from "./supabase";
 
 export type ProfileView = {
@@ -35,7 +35,7 @@ export const getProfile = cache(async (): Promise<ProfileView> => {
   if (existing.data) return existing.data;
 
   const identity = await session.identity();
-  must(
+  mustOk(
     await db
       .from("profiles")
       .upsert(

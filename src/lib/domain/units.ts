@@ -177,8 +177,13 @@ const MASS_LADDER_METRIC = ["g", "kg"];
  * Nearest "kitchen friendly" value, or null. Precision shrinks as amounts grow: eighths only
  * below 2, thirds and quarters below 10, halves above — nobody measures 14⅜ of anything.
  */
-export function friendly(value: number, tolerance = 0.03, allowEighths = true): number | null {
-  const denominators =
+export function friendly(
+  value: number,
+  tolerance = 0.03,
+  allowEighths = true,
+  allowThirds = true,
+): number | null {
+  const base =
     value >= 10
       ? [1, 2]
       : value >= 2
@@ -186,6 +191,8 @@ export function friendly(value: number, tolerance = 0.03, allowEighths = true): 
         : allowEighths
           ? [1, 2, 3, 4, 8]
           : [1, 2, 3, 4];
+  // Thirds read naturally in cups and spoons ("⅓ cup"), not in pounds.
+  const denominators = allowThirds ? base : base.filter((d) => d !== 3);
   for (const d of denominators) {
     const nearest = Math.round(value * d) / d;
     if (Math.abs(nearest - value) <= tolerance) return nearest;
@@ -193,15 +200,27 @@ export function friendly(value: number, tolerance = 0.03, allowEighths = true): 
   return null;
 }
 
-/** Smallest amount worth expressing in a unit, and whether eighths read naturally in it. */
-const UNIT_RULES: Record<string, { min: number; eighths: boolean }> = {
+type UnitRule = { min: number; eighths: boolean; thirds?: boolean; max?: number };
+
+/**
+ * Smallest amount worth expressing in a unit, whether eighths read naturally in it, and the
+ * amount at which a larger unit (when one is available) reads better: nobody measures 30 tbsp
+ * or 54 oz — that is 1⅞ cups and 3⅜ lb.
+ */
+const UNIT_RULES: Record<string, UnitRule> = {
   cup: { min: 0.25, eighths: false },
-  lb: { min: 0.25, eighths: false },
+  lb: { min: 0.25, eighths: false, thirds: false },
   pt: { min: 1, eighths: false },
   qt: { min: 1, eighths: false },
   gal: { min: 1, eighths: false },
+  tsp: { min: 0.97, eighths: true, max: 3 },
+  tbsp: { min: 0.97, eighths: true, max: 16 },
+  oz: { min: 0.97, eighths: true, max: 16 },
+  "fl oz": { min: 0.97, eighths: true, max: 8 },
+  g: { min: 0.97, eighths: true, max: 1000 },
+  ml: { min: 0.97, eighths: true, max: 1000 },
 };
-const DEFAULT_UNIT_RULE = { min: 0.97, eighths: true };
+const DEFAULT_UNIT_RULE: UnitRule = { min: 0.97, eighths: true };
 
 /**
  * Picks the unit and amount to show for a combined measured total. It only ever uses units the
@@ -234,8 +253,11 @@ export function pickMeasured(
     const unit = candidates[i]!;
     const rule = UNIT_RULES[unit] ?? DEFAULT_UNIT_RULE;
     const amount = fromBase(baseTotal, unit);
+    // Too big for this unit when a larger one is on the ladder ("30 tbsp" → cups).
+    const hasLarger = i < candidates.length - 1;
+    if (rule.max !== undefined && amount >= rule.max && hasLarger) continue;
     if (amount >= rule.min) {
-      const nice = friendly(amount, 0.03, rule.eighths);
+      const nice = friendly(amount, 0.03, rule.eighths, rule.thirds ?? true);
       if (nice !== null) return { quantity: nice, unit };
     }
   }

@@ -149,6 +149,28 @@ describe("pickMeasured", () => {
     expect(pickMeasured(toBase(1500, "g"), "mass", ["g"])).toEqual({ quantity: 1.5, unit: "kg" });
   });
 
+  it("never shows amounts nobody measures — 30 tbsp, 54 oz", () => {
+    // 1⅞ cups is not a friendly number, but 30 tbsp is not something a cook says either.
+    const rice = pickMeasured(toBase(30, "tbsp"), "volume", ["tbsp", "cup"]);
+    expect(rice.unit).toBe("cup");
+    expect(rice.quantity).toBeCloseTo(1.88, 2);
+    // A tablespoon-only recipe still moves up the ladder to cups.
+    expect(pickMeasured(toBase(32, "tbsp"), "volume", ["tbsp"])).toEqual({
+      quantity: 2,
+      unit: "cup",
+    });
+    // 54 oz of chicken → pounds, not ounces.
+    const chicken = pickMeasured(toBase(54, "oz"), "mass", ["oz", "lb"]);
+    expect(chicken.unit).toBe("lb");
+    expect(chicken.quantity).toBeCloseTo(3.38, 2);
+    // Small amounts keep the small unit.
+    expect(pickMeasured(toBase(12, "oz"), "mass", ["oz", "lb"])).toEqual({
+      quantity: 0.75,
+      unit: "lb",
+    });
+    expect(pickMeasured(toBase(5, "oz"), "mass", ["oz"])).toEqual({ quantity: 5, unit: "oz" });
+  });
+
   it("falls back to a unit the recipes used when nothing is friendly", () => {
     const result = pickMeasured(toBase(0.3, "cup"), "volume", ["cup"]);
     expect(result.unit).toBe("cup");

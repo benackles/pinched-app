@@ -158,46 +158,44 @@ export function GroceryList({
                   const checked = isChecked(item);
                   const amount = groceryAmount(item);
                   return (
-                    <li key={item.id} className="flex items-start gap-3 py-1.5">
+                    <li key={item.id} className="flex items-start gap-3 py-2">
                       <Checkbox
                         checked={checked}
                         onCheckedChange={() => void toggle(item)}
                         className="mt-1 size-5"
                         aria-label={`Got ${amount ? `${amount} ` : ""}${item.name}`}
                       />
-                      <div
-                        className={cn(
-                          "min-w-0 flex-1",
-                          checked && "text-muted-foreground line-through",
-                        )}
-                      >
+                      <div className="min-w-0 flex-1">
+                        <div className={cn(checked && "text-muted-foreground line-through")}>
+                          <button
+                            type="button"
+                            className="text-left font-medium hover:underline disabled:no-underline"
+                            disabled={!online}
+                            onClick={() => setEdit(item)}
+                            aria-label={`Edit ${item.name}`}
+                          >
+                            {amount && <span>{amount} </span>}
+                            {item.name}
+                          </button>
+                          {item.sources.length > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              For {item.sources.join(", ")}
+                            </p>
+                          )}
+                          {item.is_custom && item.sources.length === 0 && (
+                            <p className="text-xs text-muted-foreground">Added by you</p>
+                          )}
+                        </div>
                         <button
                           type="button"
-                          className="text-left font-medium hover:underline disabled:no-underline"
-                          disabled={!online}
-                          onClick={() => setEdit(item)}
-                          aria-label={`Edit ${item.name}`}
+                          className="mt-1 inline-flex min-h-7 items-center text-xs font-semibold text-primary-strong underline-offset-2 hover:underline disabled:opacity-50 pointer-coarse:min-h-11"
+                          disabled={!online || pending}
+                          onClick={() => owned(item, true)}
+                          aria-label={`I already have ${item.name}`}
                         >
-                          {amount && <span>{amount} </span>}
-                          {item.name}
+                          Already have it
                         </button>
-                        {item.sources.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            For {item.sources.join(", ")}
-                          </p>
-                        )}
-                        {item.is_custom && item.sources.length === 0 && (
-                          <p className="text-xs text-muted-foreground">Added by you</p>
-                        )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={!online || pending}
-                        onClick={() => owned(item, true)}
-                      >
-                        Already have
-                      </Button>
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -300,11 +298,11 @@ export function AddCustomForm({ weekStart }: { weekStart: string }) {
         onChange={(e) => setText(e.target.value)}
         placeholder="Add an item — 2 limes, paper towels"
         aria-label="Add your own grocery item"
-        className="h-11 min-w-0 flex-1 rounded-full px-5"
+        className="h-11 min-w-0 basis-full rounded-full px-5 sm:flex-1 sm:basis-0"
         disabled={!online}
         autoComplete="off"
       />
-      <div className="w-40">
+      <div className="min-w-0 flex-1 sm:w-40 sm:flex-none">
         <NativeSelect
           aria-label="Aisle"
           value={section}
