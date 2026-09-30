@@ -14,6 +14,7 @@ export default defineConfig([
     "next-env.d.ts",
     "public/sw.js",
     "supabase/functions/**",
+    ".scratch/**", // local experiments, git-ignored
   ]),
   {
     rules: {
