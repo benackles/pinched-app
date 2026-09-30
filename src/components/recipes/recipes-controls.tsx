@@ -50,7 +50,7 @@ export function RecipeSearch({ placeholder }: { placeholder: string }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
-        className="h-12 rounded-full pl-11"
+        className="h-12 rounded-full pl-11 text-ellipsis"
         aria-label="Search recipes"
         enterKeyHint="search"
       />

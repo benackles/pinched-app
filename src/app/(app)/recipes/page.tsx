@@ -67,9 +67,7 @@ export default async function RecipesPage({
         <Suspense>
           <RecipeSearch
             placeholder={
-              tab === "mine"
-                ? "Search your recipes by title or ingredient…"
-                : "Search the catalog — chicken, lentils, quick dinner…"
+              tab === "mine" ? "Search by title or ingredient" : "Search: chicken, lentils, quick"
             }
           />
         </Suspense>
