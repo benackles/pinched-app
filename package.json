@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Pinched \u2014 plan the week, shop for the gap, prep once, cook faster.",
+  "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20.9.0"
   },

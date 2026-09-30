@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, types, unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # the version comes from "packageManager" in package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Format
+        run: pnpm format:check
+      - name: Lint
+        run: pnpm lint
+      - name: Types (app, tests, scripts)
+        run: pnpm typecheck
+
+      - name: Seeded catalog is valid
+        run: pnpm catalog:build --check
+      - name: Migrations match the schema (no hand-edited drift)
+        run: |
+          pnpm db:generate
+          test -z "$(git status --porcelain supabase/migrations)" || {
+            echo "::error::src/db/schema.ts changed without a migration. Run 'pnpm db:generate' and commit the result."
+            git status --porcelain supabase/migrations
+            exit 1
+          }
+
+      # Domain logic, every migration and every Row Level Security rule against a real Postgres
+      # (PGlite), webhooks, the reminder job, the offline queue.
+      - name: Unit and database tests
+        run: pnpm test
+
+  e2e:
+    name: End-to-end (real browser, production build)
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # A production build with the service worker allowed on localhost, so the offline specs run
+      # against the real worker. No credentials: the app runs in its local demo mode.
+      - name: Build
+        run: pnpm build:e2e
+      - name: Test
+        run: pnpm test:e2e
+        env:
+          E2E_PROD: "1"
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
