@@ -9,6 +9,7 @@ import type { MealPick } from "@/components/plan/add-meal-dialog";
 import { AddMealProvider } from "@/components/plan/add-meal-provider";
 import { GenerateButtons } from "@/components/plan/generate-buttons";
 import { MealCard, type MealCardData } from "@/components/plan/meal-card";
+import { UpgradedBanner } from "@/components/plan/upgraded-banner";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { generateGrocery } from "@/lib/domain/grocery";
@@ -26,7 +27,7 @@ import {
 import { dayOptions } from "@/lib/plan";
 import { withWeek } from "@/lib/routes";
 import { cn } from "@/lib/utils";
-import { getProfile, getTimezone } from "@/server/profile";
+import { getProfile, getTimezone, isPro } from "@/server/profile";
 import { listKitchen, toStock } from "@/server/queries/kitchen";
 import { loadGroceryState, loadPrepState } from "@/server/queries/outputs";
 import { pickerRecipes } from "@/server/queries/recipes";
@@ -47,9 +48,9 @@ function Stat({ value, label }: { value: string | number; label: string }) {
 export default async function PlanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string; upgraded?: string }>;
+  searchParams: Promise<{ week?: string; upgraded?: string; session_id?: string }>;
 }) {
-  const { week } = await searchParams;
+  const { week, upgraded, session_id: sessionId } = await searchParams;
   const db = await userClient();
   const profile = await getProfile();
   const tz = await getTimezone(profile);
@@ -114,6 +115,7 @@ export default async function PlanPage({
 
   return (
     <AddMealProvider days={dayChoices} defaultDate={defaultDate} recipes={picks}>
+      {upgraded === "1" && <UpgradedBanner sessionId={sessionId ?? null} pro={await isPro()} />}
       <PageHeader
         eyebrow={`Week of ${shortDate(weekStart)}`}
         title={isThisWeek ? "This Week" : "Week plan"}

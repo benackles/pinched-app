@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
+import { offerInstall } from "@/components/pwa/install-prompt";
 import { Button } from "@/components/ui/button";
 import { useOnline } from "@/hooks/use-online";
 import { unwrap } from "@/lib/actions/client";
@@ -37,6 +38,7 @@ export function GenerateButtons({
       const done = unwrap(await regenerateGrocery({ weekStart }));
       if (!done) return;
       toast.success(`Grocery list ready — ${pluralize(done.data.toBuy, "item")} to buy`);
+      if (done.data.created) offerInstall();
       router.push(groceryHref);
     });
   const prep = () =>
@@ -46,6 +48,7 @@ export function GenerateButtons({
       toast.success(
         `Prep plan ready — ${pluralize(done.data.tasks, "task")}, ${done.data.totalMinutes} min`,
       );
+      if (done.data.created) offerInstall();
       router.push(prepHref);
     });
 

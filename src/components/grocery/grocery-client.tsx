@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { OfflineNote } from "@/components/common/offline-note";
+import { offerInstall } from "@/components/pwa/install-prompt";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -524,7 +525,8 @@ export function RegenerateGroceryButton({
           start(async () => {
             const done = unwrap(await regenerateGrocery({ weekStart }));
             if (!done) return;
-            const { added, removed, changed, toBuy } = done.data;
+            const { added, removed, changed, toBuy, created } = done.data;
+            if (created) offerInstall();
             const parts = [
               added && `${added} added`,
               removed && `${removed} removed`,

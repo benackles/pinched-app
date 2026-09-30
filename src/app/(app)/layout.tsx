@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell/app-shell";
 import { TimezoneSync } from "@/components/app-shell/timezone-sync";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineSync } from "@/components/pwa/offline-sync";
 import { authMode } from "@/lib/auth/config";
 import { requireSession } from "@/server/auth";
@@ -17,6 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       status={<OfflineSync userId={session.userId} />}
     >
       <TimezoneSync profileZone={profile.timezone} />
+      <InstallPrompt />
       {children}
     </AppShell>
   );

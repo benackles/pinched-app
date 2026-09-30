@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { OfflineNote } from "@/components/common/offline-note";
+import { offerInstall } from "@/components/pwa/install-prompt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -342,7 +343,8 @@ export function RegeneratePrepButton({
         start(async () => {
           const done = unwrap(await regeneratePrep({ weekStart }));
           if (!done) return;
-          const { added, removed, changed, tasks, totalMinutes } = done.data;
+          const { added, removed, changed, tasks, totalMinutes, created } = done.data;
+          if (created) offerInstall();
           const parts = [
             added && `${added} added`,
             removed && `${removed} removed`,

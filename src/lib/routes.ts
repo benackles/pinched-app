@@ -15,3 +15,6 @@ export function withWeek(
 ): Route {
   return (week === currentWeek ? path : `${path}?week=${week}`) as Route;
 }
+
+/** An absolute URL outside the app (Stripe Checkout, the billing portal) for redirect(). */
+export const external = (url: string) => url as Route;
