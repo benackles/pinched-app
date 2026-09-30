@@ -51,4 +51,8 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/send-reminders" \
 ```
 
 The response only ever contains counts. Tests: `pnpm test tests/reminders` (rules, and the whole job
-against a real Postgres with the sender replaced by a recorder).
+against a real Postgres with the sender replaced by a recorder), and `pnpm test tests/edge`, which
+runs **this function under Deno** with the real `web-push` and `supabase-js` against a fake push
+service — it checks the VAPID signature, decrypts the payload the way a browser does, and covers a
+gone device, a failing one and the once-a-day guarantee. It needs `deno` and `openssl` and is skipped
+without them (`DENO_BIN=/path/to/deno` to point at one).

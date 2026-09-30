@@ -71,6 +71,12 @@ Deno.serve(async (request) => {
         const status = (error as { statusCode?: number }).statusCode;
         const gone = status === 404 || status === 410;
         const retryable = !gone && (status === undefined || status === 429 || status >= 500);
+        // What the push service said — never the payload, the keys or the full endpoint.
+        console.warn(
+          `push to ${new URL(target.endpoint).host} failed:`,
+          status ?? "no response",
+          error instanceof Error ? error.message.slice(0, 200) : "",
+        );
         return { ok: false, gone, retryable, status };
       }
     };

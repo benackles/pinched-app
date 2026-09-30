@@ -145,7 +145,9 @@ pnpm build:e2e && E2E_PROD=1 pnpm test:e2e   # against a production build — al
   incompatibility, inventory subtraction, regeneration that keeps manual edits, prep grouping, URL
   import (valid, missing JSON-LD, bad URL, private addresses), **every Row Level Security rule and
   cross-user access** against a real Postgres (PGlite) running the real migrations, Stripe and Clerk
-  webhooks (signatures, retries, out-of-order events), the reminder job, the offline queue.
+  webhooks (signatures, retries, out-of-order events), the reminder job — including the real Edge
+  Function under Deno sending a VAPID-signed, encrypted push that the test decrypts like a browser
+  would (needs `deno`; skipped without it) — and the offline queue.
 - **End to end** (`playwright`): the PRD acceptance flow, offline behaviour with the real service
   worker (the network is cut at a TCP proxy, so the worker is offline too), media uploads, the free
   plan's gates, install prompts (including iPhone Safari), and an **axe-core accessibility scan** of
@@ -184,8 +186,9 @@ account in Clerk deletes all of the person's data, files included.
   switch, not against live Stripe — run the acceptance flow's step 10 in test mode before launch.
 - **Clerk + Supabase Third-Party Auth** was developed against the local backend that mimics the same
   contract (RLS on the `sub` claim); confirm it once with real keys.
-- **Push** needs the Edge Function deployed and a real device; the job itself is tested against a
-  real Postgres with a recording sender.
+- **Push** is verified end to end except the last hop: the function runs under Deno in the tests and
+  its notification is VAPID-signed and encrypted correctly, but it has not yet been delivered by a real
+  browser push service (FCM, APNs web push). Deploy it, turn reminders on from a phone, and check.
 - **Orphaned uploads**: a file uploaded but never attached (tab closed mid-way) is not yet swept.
 - **Content-Security-Policy** is limited to `frame-ancestors`; a stricter policy needs testing with
   Clerk, Stripe and the service worker together.
