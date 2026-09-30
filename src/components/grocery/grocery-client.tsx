@@ -418,7 +418,7 @@ function AddToKitchenDialog({ item, onClose }: { item: GroceryItemView; onClose:
     item.quantity === null ? "" : formatQuantity(item.quantity),
   );
   const [unit, setUnit] = useState(item.unit ?? "");
-  const [location, setLocation] = useState<string>(kitchenLocationFor(item.section));
+  const [location, setLocation] = useState<string>(kitchenLocationFor(item.section, item.name));
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 

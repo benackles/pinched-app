@@ -5,9 +5,13 @@ import { authMode } from "@/lib/auth/config";
 import { isProtectedPath } from "@/lib/auth/protected-routes";
 import { LOCAL_SESSION_COOKIE, readLocalToken } from "@/server/local/session";
 
-const withClerk = clerkMiddleware(async (auth, request) => {
-  if (isProtectedPath(request.nextUrl.pathname)) await auth.protect();
-});
+// Signed-out visitors go to our own branded pages, not Clerk's hosted Account Portal.
+const withClerk = clerkMiddleware(
+  async (auth, request) => {
+    if (isProtectedPath(request.nextUrl.pathname)) await auth.protect();
+  },
+  { signInUrl: "/sign-in", signUpUrl: "/sign-up" },
+);
 
 function redirectToSignIn(request: NextRequest) {
   const url = request.nextUrl.clone();

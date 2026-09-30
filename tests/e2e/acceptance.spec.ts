@@ -64,7 +64,10 @@ test("the whole week: recipes → kitchen → plan → grocery → prep → cook
       await expect(page.getByRole("button", { name: /^Delete / })).toHaveCount(index + 1);
     }
     await expect(page.getByText("6 Onions")).toBeVisible();
-    await expect(page.getByText("1 lb Chicken thighs")).toBeVisible();
+    // With no tab chosen, each item lands somewhere sensible (and can be moved).
+    const rows = page.getByRole("main").getByRole("listitem");
+    await expect(rows.filter({ hasText: "Chicken thighs" })).toContainText(/fridge/i);
+    await expect(rows.filter({ hasText: "Onions" })).toContainText(/pantry/i);
   });
 
   await test.step("4 · plan four meals, change servings, move one", async () => {

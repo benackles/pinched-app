@@ -32,6 +32,9 @@ export function UpgradedBanner({ sessionId, pro }: { sessionId: string | null; p
     };
   }, [pro, sessionId, router]);
 
+  // `?upgraded=1` without a checkout to confirm, and not on Pro: nothing to celebrate or wait for.
+  if (!pro && !sessionId) return null;
+
   return (
     <div
       role="status"

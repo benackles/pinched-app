@@ -41,7 +41,7 @@ export type KitchenRow = {
   useSoon: boolean;
 };
 
-export function QuickAdd({ location }: { location: KitchenLocation }) {
+export function QuickAdd({ location }: { location: KitchenLocation | null }) {
   const [text, setText] = useState("");
   const [, start] = useTransition();
   const online = useOnline();

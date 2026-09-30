@@ -25,10 +25,4 @@ export function groceryAmount(
   return item.unit ? `${amount} ${unitLabel(item.unit, item.quantity)}` : amount;
 }
 
-/** Where a bought item most likely lives, for the "Add to Kitchen" prefill. */
-export function kitchenLocationFor(section: GrocerySection): "pantry" | "fridge" | "freezer" {
-  if (section === "Frozen") return "freezer";
-  if (section === "Produce" || section === "Dairy & Eggs" || section === "Meat & Seafood")
-    return "fridge";
-  return "pantry";
-}
+export { kitchenLocationFor } from "@/lib/domain/kitchen-location";

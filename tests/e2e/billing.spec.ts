@@ -49,6 +49,13 @@ test("Free gets the prep plan for two weeks; the third needs Pro, and Pro unlock
     await expect(page.getByText(/Used in:/).first()).toBeVisible();
   });
 
+  await test.step("returning from Checkout: nothing to confirm means no banner, Pro means a welcome", async () => {
+    // A stray ?upgraded=1 on the free plan must not claim anything.
+    await page.goto("/plan?upgraded=1");
+    await expect(page.getByRole("heading", { level: 1, name: /This Week/ })).toBeVisible();
+    await expect(page.getByText(/Welcome to Pinched Pro|Finishing your upgrade/)).toHaveCount(0);
+  });
+
   await test.step("Pro unlocks the third week", async () => {
     await page.goto("/settings");
     await page.getByRole("button", { name: "Try Pro locally (demo)" }).click();
@@ -58,6 +65,11 @@ test("Free gets the prep plan for two weeks; the third needs Pro, and Pro unlock
     await expect(page.getByRole("heading", { name: "Unlock prep for every week" })).toHaveCount(0);
     await page.getByRole("button", { name: "Create prep plan" }).click();
     await expect(page.getByText(/Used in:/).first()).toBeVisible();
+
+    // Back from Checkout as a Pro: a welcome, and the address bar is tidied.
+    await page.goto("/plan?upgraded=1&session_id=cs_test_123");
+    await expect(page.getByText(/Welcome to Pinched Pro/)).toBeVisible();
+    await expect(page).toHaveURL(/\/plan$/);
   });
 
   expect(errors).toEqual([]);

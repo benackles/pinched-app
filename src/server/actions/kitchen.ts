@@ -1,5 +1,6 @@
 "use server";
 
+import { guessKitchenLocation } from "@/lib/domain/kitchen-location";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -100,7 +101,9 @@ export async function quickAddKitchen(input: z.input<typeof quickAddSchema>) {
     const db = await userClient();
     const outcomes = { added: 0, merged: 0, had: 0 };
     for (const item of items.slice(0, 50)) {
-      outcomes[await addOrMerge(db, { ...item, location })]++;
+      // On a specific tab the item goes there; on "All" milk goes in the fridge and rice in the pantry.
+      const where = location ?? guessKitchenLocation(item.normalized_name);
+      outcomes[await addOrMerge(db, { ...item, location: where })]++;
     }
     refresh();
     return { names: items.map((i) => i.name), ...outcomes };

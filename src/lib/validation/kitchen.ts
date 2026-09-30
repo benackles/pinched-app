@@ -6,7 +6,8 @@ import { isoDate, optionalText, uuid } from "./common";
 
 export const quickAddSchema = z.object({
   text: z.string().trim().min(1, "Type something you have, like “6 eggs”.").max(2000),
-  location: z.enum(KITCHEN_LOCATIONS).default("pantry"),
+  /** Where they are adding it from; omitted on "All", so each item gets a sensible default. */
+  location: z.enum(KITCHEN_LOCATIONS).nullish(),
 });
 
 const quantity = z.number().min(0, "Quantity can't be negative.").max(100_000).nullable();

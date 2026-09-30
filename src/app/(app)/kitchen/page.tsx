@@ -42,7 +42,8 @@ export default async function KitchenPage({
       useSoon: item.expires_at !== null && item.expires_at <= soon,
     }));
 
-  const newItemLocation: KitchenLocation = tab === "all" ? "pantry" : (tab as KitchenLocation);
+  // On a specific tab, new items go there; on "All" each item gets a sensible default.
+  const newItemLocation: KitchenLocation | null = tab === "all" ? null : (tab as KitchenLocation);
 
   return (
     <>

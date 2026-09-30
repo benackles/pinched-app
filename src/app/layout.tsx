@@ -86,6 +86,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   // Without Clerk keys the app runs in local mode (or shows a setup screen) — no provider.
   return isClerkConfigured() ? (
     <ClerkProvider
+      // Our own pages (not Clerk's hosted ones), landing on the week after signing in or up.
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/plan"
+      signUpFallbackRedirectUrl="/plan"
+      afterSignOutUrl="/"
       appearance={{
         // Brand values in hex — Clerk's color math does not parse OKLCH.
         variables: {
