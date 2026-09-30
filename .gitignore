@@ -36,3 +36,6 @@ tests/e2e/.artifacts/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# scratch space for local experiments
+.scratch/
