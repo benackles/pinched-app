@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { track } from "@/server/analytics";
 import { priceIds, stripe } from "@/server/billing/stripe";
 import { handleStripeEvent } from "@/server/billing/webhook";
 import { adminClient } from "@/server/supabase";
@@ -27,11 +28,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await handleStripeEvent(event, {
+    const { change, ...result } = await handleStripeEvent(event, {
       admin: adminClient(),
       stripe: stripe(),
       prices: priceIds(),
     });
+    if (change?.kind === "started") {
+      await track(change.userId, "subscription_started", {
+        plan: change.plan ?? "unknown",
+        trial: change.trial,
+      });
+    } else if (change?.kind === "converted") {
+      await track(change.userId, "subscription_converted", { plan: change.plan ?? "unknown" });
+    } else if (change?.kind === "ended") {
+      await track(change.userId, "subscription_ended", { plan: change.plan ?? "unknown" });
+    }
     return NextResponse.json({ received: true, ...result });
   } catch (error) {
     // A 500 makes Stripe retry — every write is an idempotent upsert, so retrying is safe.

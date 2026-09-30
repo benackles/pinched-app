@@ -1,6 +1,7 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { track } from "@/server/analytics";
 import { isBillingConfigured, stripe } from "@/server/billing/stripe";
 import { handleClerkEvent, type ClerkUserEvent } from "@/server/clerk/webhook";
 import { adminClient } from "@/server/supabase";
@@ -41,6 +42,10 @@ export async function POST(request: NextRequest) {
       admin: adminClient(),
       cancelSubscriptions,
     });
+    // Funnel start. Clerk sends user.created once per person; nothing about them is recorded.
+    if (event.type === "user.created" && result.handled) {
+      await track((event as unknown as ClerkUserEvent).data.id ?? "", "signed_up", {});
+    }
     return NextResponse.json({ received: true, ...result });
   } catch (error) {
     console.error("[clerk webhook]", event.type, error);

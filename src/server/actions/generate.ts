@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { summarizePrep } from "@/lib/domain/prep";
 import { isISODate, mondayOf } from "@/lib/domain/week";
+import { track } from "@/server/analytics";
+import { requireSession } from "@/server/auth";
 import { must, mustOk } from "@/server/db";
 import { applyGroceryMerge, planGrocery, summarizeGroceryChanges } from "@/server/generate/grocery";
 import {
@@ -54,6 +57,12 @@ export async function regenerateGrocery(input: z.input<typeof weekSchema>) {
     revalidatePath("/grocery-list");
     revalidatePath("/plan");
     const live = merged.items.filter((item) => !item.is_removed && !item.is_already_owned);
+    // Activation (PRD): a grocery list and a prep plan in week one. Only the first build counts.
+    await track((await requireSession()).userId, "grocery_generated", {
+      created: list === null,
+      meals: ctx.meals.length,
+      items_to_buy: live.length,
+    });
     return { created: list === null, toBuy: live.length, ...changes };
   });
 }
@@ -71,7 +80,7 @@ export async function regeneratePrep(input: z.input<typeof weekSchema>) {
     if (!ctx.plan || ctx.meals.length === 0) {
       throw new ActionFailure("validation", "Add a meal to the week first.");
     }
-    const { plan, existing, merged } = await planPrep(db, ctx);
+    const { plan, existing, merged, drafts } = await planPrep(db, ctx);
 
     const { plan: planRow, created } = plan
       ? { plan, created: false }
@@ -87,11 +96,13 @@ export async function regeneratePrep(input: z.input<typeof weekSchema>) {
 
     revalidatePath("/prep");
     revalidatePath("/plan");
-    return {
+    const tasks = merged.tasks.filter((t) => !t.is_removed).length;
+    await track((await requireSession()).userId, "prep_generated", {
       created,
-      tasks: merged.tasks.filter((t) => !t.is_removed).length,
-      totalMinutes,
-      ...changes,
-    };
+      tasks,
+      minutes: totalMinutes,
+      saved_minutes: summarizePrep(drafts).savedMinutes,
+    });
+    return { created, tasks, totalMinutes, ...changes };
   });
 }

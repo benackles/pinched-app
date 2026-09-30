@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { trackClientEvent } from "@/server/actions/analytics";
 import {
   afterDismiss,
   afterInstall,
@@ -30,6 +31,7 @@ type BeforeInstallPromptEvent = Event & {
 
 const STORAGE_KEY = "pinched.install.v1";
 const OFFER_EVENT = "pinched:offer-install";
+const OPENED_KEY = "pinched.opened.v1";
 
 let deferred: BeforeInstallPromptEvent | null = null;
 let installed = false;
@@ -162,6 +164,7 @@ export function InstallPrompt() {
       writeState(afterInstall(readState()));
       setOpen(false);
       publish();
+      void trackClientEvent({ event: "install_accepted" });
     };
     const onOffer = () => {
       const iosDevice = ios();
@@ -169,10 +172,25 @@ export function InstallPrompt() {
       if (!shouldAskToInstall(readState(), { standalone: standalone(), now: Date.now() })) return;
       setOnIos(iosDevice && !deferred);
       setOpen(true);
+      void trackClientEvent({
+        event: "install_prompt_shown",
+        platform: iosDevice && !deferred ? "ios" : "other",
+      });
     };
     window.addEventListener("beforeinstallprompt", onBefore);
     window.addEventListener("appinstalled", onInstalled);
     window.addEventListener(OFFER_EVENT, onOffer);
+
+    // Launched as an installed app (Home Screen / app window)? Say so once per session — this is the
+    // PRD's "PWA install rate", and the only way to see an iOS install (Safari gives no event).
+    try {
+      if (standalone() && !window.sessionStorage.getItem(OPENED_KEY)) {
+        window.sessionStorage.setItem(OPENED_KEY, "1");
+        void trackClientEvent({ event: "pwa_opened", platform: ios() ? "ios" : "other" });
+      }
+    } catch {
+      // storage unavailable: skip
+    }
     return () => {
       window.removeEventListener("beforeinstallprompt", onBefore);
       window.removeEventListener("appinstalled", onInstalled);
@@ -183,6 +201,7 @@ export function InstallPrompt() {
   function dismiss() {
     writeState(afterDismiss(readState(), Date.now()));
     setOpen(false);
+    void trackClientEvent({ event: "install_dismissed" });
   }
 
   async function install() {

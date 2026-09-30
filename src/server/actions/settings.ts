@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { pushSubscriptionSchema, settingsSchema } from "@/lib/validation/settings";
+import { track } from "@/server/analytics";
 import { requireSession } from "@/server/auth";
 import { mustOk } from "@/server/db";
 import { isPro } from "@/server/profile";
@@ -55,6 +56,7 @@ export async function savePushSubscription(input: z.input<typeof pushSubscriptio
         user_agent: data.userAgent ?? null,
       }),
     );
+    await track(session.userId, "push_enabled", {});
     revalidatePath("/settings");
   });
 }

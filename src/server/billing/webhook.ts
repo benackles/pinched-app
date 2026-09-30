@@ -23,7 +23,17 @@ export type WebhookDeps = {
   prices: { monthly?: string | undefined; yearly?: string | undefined };
 };
 
-export type WebhookResult = { handled: boolean; detail: string };
+export type WebhookResult = {
+  handled: boolean;
+  detail: string;
+  /** A subscription just started, converted from trial or ended (once, however many events Stripe sends). */
+  change?: {
+    userId: string;
+    kind: "started" | "converted" | "ended";
+    plan: string | null;
+    trial: boolean;
+  };
+};
 
 const idOf = (value: string | { id: string } | null | undefined) =>
   typeof value === "string" ? value : (value?.id ?? null);
@@ -49,8 +59,21 @@ async function syncSubscription(
   const userId = hintedUserId ?? (await resolveUserId(deps.admin, subscription));
   if (!userId) return { handled: false, detail: "no user for this subscription" };
   const row: SubscriptionRow = mapSubscription(subscription, userId, deps.prices);
-  const outcome = await upsertSubscription(deps.admin, row);
-  return { handled: outcome === "written", detail: `${subscription.status} (${outcome})` };
+  const { outcome, change } = await upsertSubscription(deps.admin, row);
+  return {
+    handled: outcome === "written",
+    detail: `${subscription.status} (${outcome})`,
+    ...(change === "started" || change === "converted" || change === "ended"
+      ? {
+          change: {
+            userId,
+            kind: change,
+            plan: row.plan,
+            trial: subscription.status === "trialing",
+          },
+        }
+      : {}),
+  };
 }
 
 /**

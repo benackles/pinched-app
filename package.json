@@ -2,7 +2,7 @@
   "name": "pinched-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Pinched \u2014 plan the week, shop for the gap, prep once, cook faster.",
+  "description": "Pinched — plan the week, shop for the gap, prep once, cook faster.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -37,12 +37,11 @@
     "lucide-react": "^1.49.0",
     "next": "16.3.8",
     "parse-ingredient": "^3.0.0",
-    "posthog-js": "^1.435.3",
     "radix-ui": "^1.6.7",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "serwist": "^9.5.12",
     "server-only": "^0.0.1",
+    "serwist": "^9.5.12",
     "sonner": "^2.0.8",
     "stripe": "^22.6.2",
     "tailwind-merge": "^3.7.0",

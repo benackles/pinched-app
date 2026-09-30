@@ -6,6 +6,8 @@ import { z } from "zod";
 import { mondayOf } from "@/lib/domain/week";
 import { uuid } from "@/lib/validation/common";
 import { addMealSchema, updateMealSchema } from "@/lib/validation/plan";
+import { track } from "@/server/analytics";
+import { requireSession } from "@/server/auth";
 import { must, mustOk } from "@/server/db";
 import { getOrCreatePlan } from "@/server/queries/week";
 import { ensureSaved } from "@/server/recipes/content";
@@ -50,6 +52,11 @@ export async function addMeal(input: z.input<typeof addMealSchema>) {
         .select("id")
         .single(),
     );
+    const inWeek = must(await db.from("planned_meals").select("id").eq("weekly_plan_id", plan.id));
+    await track((await requireSession()).userId, "meal_added", {
+      meals_in_week: inWeek.length,
+      week_start: plan.week_start_date,
+    });
     refresh();
     revalidatePath(`/recipes/${data.recipeId}`);
     return { mealId: meal.id, weekStart: plan.week_start_date };

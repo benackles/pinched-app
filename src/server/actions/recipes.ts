@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { isLocalMode } from "@/lib/auth/config";
-import { FREE_LIMITS } from "@/lib/domain/constants";
+import { FREE_LIMITS, RECIPE_SOURCES } from "@/lib/domain/constants";
 import { monthKey, todayInZone } from "@/lib/domain/week";
 import { EMPTY_DRAFT, formatIngredientLines, type RecipeDraft } from "@/lib/recipes/draft";
 import { dnsResolver, nodeTransport } from "@/lib/recipe-import/transport";
 import { importRecipe } from "@/lib/recipe-import/import";
 import { importUrlSchema, recipeFormSchema } from "@/lib/validation/recipes";
 import { uuid } from "@/lib/validation/common";
+import { track } from "@/server/analytics";
 import { requireSession } from "@/server/auth";
 import { must, mustMaybe, mustOk } from "@/server/db";
 import { removeRecipeMediaFiles } from "@/server/media/cleanup";
@@ -19,6 +20,15 @@ import { createOwnRecipe, ensureSaved, replaceOwnRecipe } from "@/server/recipes
 import { userClient } from "@/server/supabase";
 
 import { ActionFailure, runAction } from "./result";
+
+/** The site a link points at ("example.com"), for analytics. */
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "unknown";
+  }
+};
 
 const refreshRecipes = (recipeId?: string) => {
   revalidatePath("/recipes");
@@ -32,6 +42,9 @@ export async function saveRecipe(recipeId: string) {
     const id = uuid.parse(recipeId);
     const db = await userClient();
     const savedId = await ensureSaved(db, id);
+    const recipe = mustMaybe(await db.from("recipes").select("source").eq("id", id).maybeSingle());
+    const source = RECIPE_SOURCES.find((known) => known === recipe?.source);
+    if (source) await track((await requireSession()).userId, "recipe_saved", { source });
     refreshRecipes(id);
     return { savedId };
   });
@@ -86,6 +99,7 @@ export async function createManualRecipe(input: z.input<typeof recipeFormSchema>
     const data = recipeFormSchema.parse(input);
     const db = await userClient();
     const recipeId = await createOwnRecipe(db, "manual", data);
+    await track((await requireSession()).userId, "recipe_saved", { source: "manual" });
     refreshRecipes(recipeId);
     return { recipeId };
   });
@@ -274,6 +288,9 @@ export async function confirmImport(input: z.input<typeof recipeFormSchema>) {
       await db.from("recipes").delete().eq("id", recipeId);
       throw new ActionFailure("free_limit", "", { feature: "url_import" });
     }
+    const userId = (await requireSession()).userId;
+    await track(userId, "recipe_saved", { source: "url_import" });
+    await track(userId, "recipe_imported", { host: hostOf(data.source_url) });
     refreshRecipes(recipeId);
     return { recipeId, alreadyImported: false };
   });

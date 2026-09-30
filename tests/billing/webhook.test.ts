@@ -322,3 +322,112 @@ describe("Stripe webhook events", () => {
     expect(after.n).toBe(before.n);
   });
 });
+
+describe("subscription changes (reported once, for analytics)", () => {
+  const CAROL = "user_carol";
+  const trialEnd = () => Math.floor(Date.now() / 1000) + 14 * 86400;
+  const checkout = {
+    mode: "subscription",
+    client_reference_id: CAROL,
+    customer: "cus_carol",
+    subscription: "sub_c",
+  };
+
+  it("a start is reported once, however many events Stripe sends for one signup", async () => {
+    await db.exec(`insert into profiles (user_id, email) values ('${CAROL}', 'c@example.test')`);
+    const trialing = subscription({
+      id: "sub_c",
+      customer: "cus_carol",
+      userId: CAROL,
+      status: "trialing",
+      trialEnd: trialEnd(),
+    });
+    const deps = { admin: admin(), stripe: fakeStripe({ sub_c: trialing }), prices: PRICES };
+
+    const first = await handleStripeEvent(event("checkout.session.completed", checkout), deps);
+    expect(first.change).toEqual({ userId: CAROL, kind: "started", plan: "monthly", trial: true });
+
+    // The same signup also produces subscription.created and subscription.updated — and retries.
+    for (const again of [
+      event("customer.subscription.created", trialing),
+      event("customer.subscription.updated", trialing),
+      event("checkout.session.completed", checkout),
+    ]) {
+      expect((await handleStripeEvent(again, deps)).change).toBeUndefined();
+    }
+  });
+
+  it("the trial turning into a paid plan is a conversion, once", async () => {
+    const active = subscription({
+      id: "sub_c",
+      customer: "cus_carol",
+      userId: CAROL,
+      status: "active",
+    });
+    const deps = { admin: admin(), stripe: fakeStripe({ sub_c: active }), prices: PRICES };
+    const converted = await handleStripeEvent(event("customer.subscription.updated", active), deps);
+    expect(converted.change).toEqual({
+      userId: CAROL,
+      kind: "converted",
+      plan: "monthly",
+      trial: false,
+    });
+    expect(
+      (await handleStripeEvent(event("customer.subscription.updated", active), deps)).change,
+    ).toBeUndefined();
+  });
+
+  it("an end is reported once; payment trouble and renewals report nothing", async () => {
+    const deps = { admin: admin(), stripe: fakeStripe({}), prices: PRICES };
+    const pastDue = subscription({
+      id: "sub_c",
+      customer: "cus_carol",
+      userId: CAROL,
+      status: "past_due",
+    });
+    expect(
+      (
+        await handleStripeEvent(event("customer.subscription.updated", pastDue), {
+          ...deps,
+          stripe: fakeStripe({ sub_c: pastDue }),
+        })
+      ).change,
+    ).toBeUndefined();
+
+    const canceled = subscription({
+      id: "sub_c",
+      customer: "cus_carol",
+      userId: CAROL,
+      status: "canceled",
+    });
+    const ended = await handleStripeEvent(event("customer.subscription.deleted", canceled), deps);
+    expect(ended.change).toMatchObject({ userId: CAROL, kind: "ended" });
+    expect(
+      (await handleStripeEvent(event("customer.subscription.deleted", canceled), deps)).change,
+    ).toBeUndefined();
+  });
+
+  it("a late event for an old subscription reports nothing", async () => {
+    const deps = { admin: admin(), stripe: fakeStripe({}), prices: PRICES };
+    const fresh = subscription({
+      id: "sub_c2",
+      customer: "cus_carol",
+      userId: CAROL,
+      status: "active",
+    });
+    const started = await handleStripeEvent(event("customer.subscription.created", fresh), {
+      ...deps,
+      stripe: fakeStripe({ sub_c2: fresh }),
+    });
+    expect(started.change?.kind).toBe("started"); // a re-subscription after the old one ended
+    const late = await handleStripeEvent(
+      event(
+        "customer.subscription.deleted",
+        subscription({ id: "sub_c", customer: "cus_carol", userId: CAROL, status: "canceled" }),
+      ),
+      deps,
+    );
+    expect(late.handled).toBe(false);
+    expect(late.change).toBeUndefined();
+  });
+});

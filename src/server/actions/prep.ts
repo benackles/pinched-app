@@ -12,6 +12,8 @@ import {
   editPrepTaskSchema,
   weekSchema,
 } from "@/lib/validation/outputs";
+import { track } from "@/server/analytics";
+import { requireSession } from "@/server/auth";
 import { must, mustOk } from "@/server/db";
 import { getProfile } from "@/server/profile";
 import { ensurePrepPlan } from "@/server/generate/prep";
@@ -97,6 +99,20 @@ export async function setPrepTaskCompleted(input: z.input<typeof completeSchema>
       action: completed ? "complete" : "uncomplete",
       after: { is_completed: completed },
     });
+    if (completed) {
+      // Prep completion (PRD): how far through the plan they are, recorded as they go.
+      const tasks = must(
+        await db
+          .from("prep_tasks")
+          .select("is_completed")
+          .eq("prep_plan_id", row.prep_plan_id)
+          .eq("is_removed", false),
+      );
+      await track((await requireSession()).userId, "prep_task_completed", {
+        tasks_done: tasks.filter((task) => task.is_completed).length,
+        tasks_total: tasks.length,
+      });
+    }
     refresh();
     return { applied: true };
   });

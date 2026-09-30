@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { isLocalMode } from "@/lib/auth/config";
 import { external } from "@/lib/routes";
+import { track } from "@/server/analytics";
 import { requireSession } from "@/server/auth";
 import {
   isBillingConfigured,
@@ -53,6 +54,7 @@ export async function startCheckout(input: z.input<typeof planSchema>) {
       redirect(external(portal.url));
     }
 
+    await track(session.userId, "checkout_started", { plan });
     const identity = await session.identity();
     const checkout = await stripe().checkout.sessions.create({
       mode: "subscription",
@@ -119,7 +121,15 @@ export async function syncCheckout(input: z.input<typeof syncSchema>) {
     if (customer) await linkCustomer(admin, session.userId, customer);
     const subscription = checkout.subscription;
     if (subscription && typeof subscription !== "string") {
-      await upsertSubscription(admin, mapSubscription(subscription, session.userId, priceIds()));
+      const row = mapSubscription(subscription, session.userId, priceIds());
+      const { change } = await upsertSubscription(admin, row);
+      // Whichever of this and the webhook writes first records the start — only one ever does.
+      if (change === "started") {
+        await track(session.userId, "subscription_started", {
+          plan: row.plan ?? "unknown",
+          trial: subscription.status === "trialing",
+        });
+      }
     }
     revalidatePath("/plan");
     revalidatePath("/settings");

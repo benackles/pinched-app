@@ -68,14 +68,21 @@ export async function resolveUserId(
   return profile?.user_id ?? null;
 }
 
+export type SubscriptionChange = "started" | "converted" | "ended" | "updated";
+
 /**
  * Writes the row. One row per person; a later subscription replaces an earlier one. A delayed
  * "canceled" event for an OLD subscription must not wipe out the new active one, so it is ignored.
+ *
+ * `change` says what this write meant, for analytics: "started" only the first time a subscription
+ * becomes live (webhook retries and the several events Stripe sends for one signup all resolve to
+ * "updated" after that), "converted" when a free trial turns into a paid plan, "ended" when a live
+ * subscription ends.
  */
 export async function upsertSubscription(
   admin: Supabase,
   row: SubscriptionRow,
-): Promise<"written" | "ignored"> {
+): Promise<{ outcome: "written" | "ignored"; change: SubscriptionChange | null }> {
   const current = mustMaybe(
     await admin.from("subscriptions").select("*").eq("user_id", row.user_id).maybeSingle(),
   );
@@ -85,14 +92,22 @@ export async function upsertSubscription(
     LIVE.has(current.status) &&
     DEAD.has(row.status)
   ) {
-    return "ignored";
+    return { outcome: "ignored", change: null };
   }
   mustOk(
     await admin
       .from("subscriptions")
       .upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: "user_id" }),
   );
-  return "written";
+
+  const sameSubscription = current?.stripe_subscription_id === row.stripe_subscription_id;
+  const wasLive = Boolean(current && sameSubscription && LIVE.has(current.status));
+  let change: SubscriptionChange = "updated";
+  if (!wasLive && (row.status === "trialing" || row.status === "active")) change = "started";
+  else if (wasLive && current?.status === "trialing" && row.status === "active")
+    change = "converted";
+  else if (wasLive && DEAD.has(row.status)) change = "ended";
+  return { outcome: "written", change };
 }
 
 /** Links the Stripe customer to the person (the billing portal is opened for this id). */

@@ -13,6 +13,8 @@ import {
   noteSchema,
   versionSchema,
 } from "@/lib/validation/recipes";
+import { track } from "@/server/analytics";
+import { requireSession } from "@/server/auth";
 import { must, mustMaybe, mustOk } from "@/server/db";
 import { getTimezone } from "@/server/profile";
 import { ensureSaved } from "@/server/recipes/content";
@@ -233,6 +235,7 @@ export async function logCooked(input: z.input<typeof cookedSchema>) {
         await db.from("saved_recipes").update({ personal_rating: data.rating }).eq("id", savedId),
       );
     }
+    await track((await requireSession()).userId, "cooked_logged", { rated: Boolean(data.rating) });
     refresh(data.recipeId);
     revalidatePath("/plan");
     return { eventId: event.id };
