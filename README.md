@@ -83,7 +83,7 @@ src/lib/            pure, framework-free logic: domain/ (ingredients, units, gro
                     offline/, pwa/, recipe-import/, media/, analytics/ — the most heavily tested code
 src/server/         server-only: actions/ (Zod-validated mutations), queries/, billing/, media/, local/ (demo backend)
 src/db/             Drizzle schema → types
-supabase/           migrations/, seed.sql (generated), functions/send-reminders, cron/, config.toml
+supabase/           migrations/, seed.sql (generated), functions/{send-reminders,cleanup-media}, cron/, config.toml
 data/catalog/       the seeded recipes (JSON) → seed.sql
 scripts/            catalog build, icon/art generation, VAPID keys
 tests/              unit + database + RLS + e2e
@@ -116,7 +116,10 @@ Copy `.env.example` to `.env.local`. Every variable is documented there; in shor
    only on the production domain (`NEXT_PUBLIC_APP_URL`), never on preview deployments.
 5. **Reminders.** `pnpm vapid:keys`, then follow `supabase/functions/send-reminders/README.md`
    (deploy the function, set secrets, run `supabase/cron/send-reminders.sql`).
-6. **Smoke test** on a phone: the ten-step acceptance flow from the PRD, then install it.
+6. **Cleanup.** Follow `supabase/functions/cleanup-media/README.md` (one secret, deploy, run
+   `supabase/cron/cleanup-media.sql`) so photos and videos that were uploaded but never attached are
+   swept daily.
+7. **Smoke test** on a phone: the ten-step acceptance flow from the PRD, then install it.
 
 ### The seeded catalog
 
@@ -145,9 +148,10 @@ pnpm build:e2e && E2E_PROD=1 pnpm test:e2e   # against a production build — al
   incompatibility, inventory subtraction, regeneration that keeps manual edits, prep grouping, URL
   import (valid, missing JSON-LD, bad URL, private addresses), **every Row Level Security rule and
   cross-user access** against a real Postgres (PGlite) running the real migrations, Stripe and Clerk
-  webhooks (signatures, retries, out-of-order events), the reminder job — including the real Edge
-  Function under Deno sending a VAPID-signed, encrypted push that the test decrypts like a browser
-  would (needs `deno`; skipped without it) — and the offline queue.
+  webhooks (signatures, retries, out-of-order events), the reminder job and the orphaned-upload
+  sweep — including both real Edge Functions under Deno (the reminder one sends a VAPID-signed,
+  encrypted push that the test decrypts like a browser would; needs `deno`, skipped without it) — and
+  the offline queue.
 - **End to end** (`playwright`): the PRD acceptance flow, offline behaviour with the real service
   worker (the network is cut at a TCP proxy, so the worker is offline too), media uploads, the free
   plan's gates, install prompts (including iPhone Safari), and an **axe-core accessibility scan** of
@@ -177,7 +181,8 @@ Analytics are optional and server-side: anonymous events keyed by an opaque user
 properties in `src/lib/analytics/events.ts` (counts and enumerations — never emails, names, recipe
 titles or URL paths), no cookies, no autocapture, skipped for Global Privacy Control / Do Not Track.
 Photos are re-encoded in the browser before upload, which drops embedded location data. Deleting an
-account in Clerk deletes all of the person's data, files included.
+account in Clerk deletes all of the person's data, files included, and a daily job removes uploads
+that were never attached to a recipe.
 
 ## Known gaps and next steps
 
@@ -189,7 +194,9 @@ account in Clerk deletes all of the person's data, files included.
 - **Push** is verified end to end except the last hop: the function runs under Deno in the tests and
   its notification is VAPID-signed and encrypted correctly, but it has not yet been delivered by a real
   browser push service (FCM, APNs web push). Deploy it, turn reminders on from a phone, and check.
-- **Orphaned uploads**: a file uploaded but never attached (tab closed mid-way) is not yet swept.
+- **Orphaned-upload sweep** is verified end to end under Deno against a stand-in for Storage's delete
+  endpoint, not the hosted service. After deploying, run `select * from public.orphaned_media_objects()`
+  and one manual call (see its README) and check the file really disappears from the bucket.
 - **Content-Security-Policy** is limited to `frame-ancestors`; a stricter policy needs testing with
   Clerk, Stripe and the service worker together.
 - **Search rate limiting** (PRD security note) is not implemented; URL import is rate-limited.

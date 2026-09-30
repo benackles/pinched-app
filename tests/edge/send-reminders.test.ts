@@ -8,7 +8,7 @@
  * Needs `deno` and `openssl` (CI installs Deno); skipped where they are missing.
  *   DENO_BIN=/path/to/deno pnpm test tests/edge
  */
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import {
   createECDH,
   createPublicKey,
@@ -18,7 +18,7 @@ import {
   verify as verifySignature,
 } from "node:crypto";
 import fs from "node:fs";
-import http from "node:http";
+import type http from "node:http";
 import https from "node:https";
 import type { AddressInfo } from "node:net";
 import os from "node:os";
@@ -26,20 +26,12 @@ import path from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { signJwt, verifyJwt } from "@/server/local/jwt";
-import { handlePostgrest, type Queryable } from "@/server/local/postgrest/handler";
+import { signJwt } from "@/server/local/jwt";
 
 import { asService, createTestDb, type Db } from "../support/db";
+import { commandWorks, denoAvailable, startEdgeFunction, startSupabase } from "../support/edge";
 
-const DENO = process.env.DENO_BIN ?? "deno";
-const has = (command: string, args: string[]) => {
-  try {
-    return spawnSync(command, args, { stdio: "ignore" }).status === 0;
-  } catch {
-    return false;
-  }
-};
-const available = has(DENO, ["--version"]) && has("openssl", ["version"]);
+const available = denoAvailable && commandWorks("openssl", ["version"]);
 
 const SECRET = "edge-test-shim-secret";
 const CRON_SECRET = "cron-secret-for-tests";
@@ -131,35 +123,14 @@ function checkVapid(header: string, vapid: { publicKey: string }, origin: string
 let db: Db;
 let dir: string;
 let pushServer: https.Server;
-let shimServer: http.Server;
-let fn: ChildProcess;
+let supabase: Awaited<ReturnType<typeof startSupabase>>;
+let fn: Awaited<ReturnType<typeof startEdgeFunction>>;
 let fnUrl: string;
 let pushOrigin: string;
 const vapid = makeVapid();
 const devices = { ok: makeDevice(), gone: makeDevice(), flaky: makeDevice() };
 const received: Captured[] = [];
 let flakyMode: 503 | 201 = 503;
-
-async function startShim(): Promise<string> {
-  shimServer = http.createServer(async (request, response) => {
-    const chunks: Buffer[] = [];
-    for await (const chunk of request) chunks.push(chunk as Buffer);
-    const body = Buffer.concat(chunks);
-    const hasBody = request.method !== "GET" && request.method !== "HEAD";
-    const result = await handlePostgrest(
-      new Request(`http://shim.test${request.url}`, {
-        method: request.method,
-        headers: request.headers as Record<string, string>,
-        ...(hasBody ? { body } : {}),
-      }),
-      { db: db as unknown as Queryable, verifyToken: (token) => verifyJwt(token, SECRET) },
-    );
-    response.writeHead(result.status, Object.fromEntries(result.headers));
-    response.end(Buffer.from(await result.arrayBuffer()));
-  });
-  await new Promise<void>((resolve) => shimServer.listen(0, "127.0.0.1", resolve));
-  return `http://127.0.0.1:${(shimServer.address() as AddressInfo).port}`;
-}
 
 async function startPush(cert: string, key: string): Promise<string> {
   pushServer = https.createServer({ cert, key }, async (request, response) => {
@@ -176,47 +147,6 @@ async function startPush(cert: string, key: string): Promise<string> {
   });
   await new Promise<void>((resolve) => pushServer.listen(0, "127.0.0.1", resolve));
   return `https://localhost:${(pushServer.address() as AddressInfo).port}`;
-}
-
-async function startFunction(env: Record<string, string>): Promise<string> {
-  fn = spawn(
-    DENO,
-    [
-      "run",
-      "--allow-net",
-      "--allow-env",
-      "--allow-read",
-      "--allow-sys",
-      "--config",
-      "supabase/functions/send-reminders/deno.json",
-      "supabase/functions/send-reminders/index.ts",
-    ],
-    {
-      cwd: process.cwd(),
-      env: { ...process.env, ...env, DENO_SERVE_ADDRESS: "tcp:127.0.0.1:0", NO_COLOR: "1" },
-    },
-  );
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("the function did not start")), 120_000);
-    const onData = (chunk: Buffer) => {
-      const match = /Listening on (http:\/\/[^\s/]+)/.exec(chunk.toString());
-      if (match) {
-        clearTimeout(timer);
-        resolve(match[1]!);
-      }
-    };
-    fn.stdout?.on("data", onData);
-    fn.stderr?.on("data", onData);
-    fn.stdout?.on(
-      "data",
-      (chunk: Buffer) => process.env.EDGE_DEBUG && console.log("[fn]", chunk.toString()),
-    );
-    fn.stderr?.on(
-      "data",
-      (chunk: Buffer) => process.env.EDGE_DEBUG && console.log("[fn!]", chunk.toString()),
-    );
-    fn.on("exit", (code) => reject(new Error(`the function exited early (${code})`)));
-  });
 }
 
 const call = (headers: Record<string, string> = {}, method = "POST") =>
@@ -257,7 +187,7 @@ describe.skipIf(!available)("send-reminders under Deno", () => {
     );
 
     db = await createTestDb();
-    const supabaseUrl = await startShim();
+    supabase = await startSupabase(db, SECRET);
     pushOrigin = await startPush(fs.readFileSync(cert, "utf8"), fs.readFileSync(key, "utf8"));
 
     // A Pro person whose dinner reminder is due right now (UTC), with three devices.
@@ -285,8 +215,8 @@ describe.skipIf(!available)("send-reminders under Deno", () => {
         ('user_edge', '${pushOrigin}/push/${name}', '{"p256dh":"${device.p256dh}","auth":"${device.auth}"}'::jsonb)`);
     }
 
-    fnUrl = await startFunction({
-      SUPABASE_URL: supabaseUrl,
+    fn = await startEdgeFunction("send-reminders", {
+      SUPABASE_URL: supabase.url,
       SUPABASE_SERVICE_ROLE_KEY: signJwt({ role: "service_role" }, SECRET, 3600),
       REMINDERS_CRON_SECRET: CRON_SECRET,
       VAPID_PUBLIC_KEY: vapid.publicKey,
@@ -296,16 +226,15 @@ describe.skipIf(!available)("send-reminders under Deno", () => {
       DENO_CERT: cert,
       NODE_EXTRA_CA_CERTS: cert,
     });
+    fnUrl = fn.url;
   }, 180_000);
 
   afterAll(async () => {
-    fn?.kill();
+    fn?.stop();
     await new Promise<void>((resolve) =>
       pushServer ? pushServer.close(() => resolve()) : resolve(),
     );
-    await new Promise<void>((resolve) =>
-      shimServer ? shimServer.close(() => resolve()) : resolve(),
-    );
+    await supabase?.close();
     await db?.close();
     fs.rmSync(dir, { recursive: true, force: true });
   });

@@ -34,8 +34,12 @@ file_size_limit = "50MiB"
 # enabled = true
 # domain = "your-app.clerk.accounts.dev"
 
-# Reminders are triggered by pg_cron with a shared secret (see supabase/cron/send-reminders.sql),
-# not by a Supabase user token, so the gateway's JWT check is off for this function.
+# Scheduled functions are triggered by pg_cron with a shared secret (see supabase/cron/*.sql), not
+# by a Supabase user token, so the gateway's JWT check is off for them.
 [functions.send-reminders]
+enabled = true
+verify_jwt = false
+
+[functions.cleanup-media]
 enabled = true
 verify_jwt = false

@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # The reminder Edge Function is tested running under Deno, like it does on Supabase.
+      # The Edge Functions (reminders, media cleanup) are tested running under Deno, like on Supabase.
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -49,7 +49,8 @@ jobs:
           }
 
       # Domain logic, every migration and every Row Level Security rule against a real Postgres
-      # (PGlite), webhooks, the reminder job (and the real Edge Function under Deno), the offline queue.
+      # (PGlite), webhooks, the reminder and cleanup jobs (and the real Edge Functions under Deno), the
+      # offline queue.
       - name: Unit and database tests
         run: pnpm test
 
