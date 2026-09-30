@@ -13,28 +13,28 @@ export class DbError extends Error {
   }
 }
 
-type Result<T> = { data: T | null; error: PostgrestError | null };
+type Result<T> = { data: T; error: PostgrestError | null };
 
 function raise(error: PostgrestError): never {
   throw new DbError(error.code, error.message, error.details);
 }
 
-/** The rows (or row) of a query that must succeed. */
-export function must<T>(result: Result<T>): T {
+/** The rows (or row) of a query that must succeed and must return something. */
+export function must<T>(result: Result<T>): NonNullable<T> {
   if (result.error) raise(result.error);
-  return result.data as T;
+  if (result.data === null || result.data === undefined) {
+    throw new DbError("PGRST116", "No rows returned");
+  }
+  return result.data as NonNullable<T>;
+}
+
+/** For `.maybeSingle()`: the row, or null when there is none. */
+export function mustMaybe<T>(result: Result<T>): T {
+  if (result.error) raise(result.error);
+  return result.data;
 }
 
 /** For writes that return nothing: throws on error. */
 export function mustOk(result: { error: PostgrestError | null }): void {
   if (result.error) raise(result.error);
-}
-
-/** Like `must`, but a missing row (PGRST116 from .single()) is null instead of an error. */
-export function mustOrNull<T>(result: Result<T>): T | null {
-  if (result.error) {
-    if (result.error.code === "PGRST116") return null;
-    raise(result.error);
-  }
-  return result.data;
 }

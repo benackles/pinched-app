@@ -245,3 +245,27 @@ describe("personal versions", () => {
     expect(buildIngredient({ name: "salt" })).toMatchObject({ quantity: null, raw_text: "Salt" });
   });
 });
+
+describe("scaleIngredient", () => {
+  it("scales measured amounts into the unit a cook would reach for", async () => {
+    const { scaleIngredient } = await import("./scaling");
+    const { formatIngredient, parseIngredientLine } = await import("./ingredients");
+    const show = (line: string, factor: number) => {
+      const parsed = parseIngredientLine(line)[0];
+      if (!parsed || parsed.kind !== "ingredient") throw new Error("unparsed");
+      return formatIngredient(scaleIngredient(parsed.ingredient, factor));
+    };
+    expect(show("1 cup rice", 2)).toBe("2 cups rice");
+    expect(show("1 tbsp olive oil", 0.5)).toBe("1½ tsp olive oil");
+    expect(show("½ tsp salt", 3)).toBe("1½ tsp salt");
+    expect(show("8 tbsp butter", 1.5)).toBe("¾ cup butter");
+    expect(show("2 onions, diced", 1.5)).toBe("3 onions, diced");
+    expect(show("1 lb ground turkey", 2)).toBe("2 lb ground turkey");
+  });
+
+  it("never invents an amount", async () => {
+    const { scaleIngredient } = await import("./scaling");
+    const ingredient = { quantity: null, quantity_max: null, unit: null };
+    expect(scaleIngredient(ingredient, 3)).toBe(ingredient);
+  });
+});

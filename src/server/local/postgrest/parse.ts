@@ -161,7 +161,9 @@ function parseCondition(column: string, expr: string): Condition {
   if (!(FILTER_OPS as readonly string[]).includes(op)) {
     throw bad(`unsupported operator "${op}"`, `Supported: ${FILTER_OPS.join(", ")}`);
   }
-  return { column, op, value: rest.slice(dot + 1), negate };
+  // Inside or(…)/and(…), values containing commas or parentheses arrive double-quoted.
+  const raw = rest.slice(dot + 1);
+  return { column, op, value: op === "in" ? raw : unquote(raw), negate };
 }
 
 /** Parses the inside of `or=(…)` / `and=(…)`, including nested `and(…)` / `or(…)` / `not.and(…)`. */

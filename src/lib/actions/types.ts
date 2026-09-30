@@ -33,4 +33,5 @@ export const FREE_LIMIT_MESSAGES: Record<string, string> = {
   prep_plans:
     "Free accounts can build the prep plan for the next 2 weeks. Upgrade to Pro for every week.",
   recipe_media: "Free accounts can attach one photo or video per recipe. Upgrade to Pro for more.",
+  url_import: "Free accounts can import 5 recipes a month. Upgrade to Pro for unlimited imports.",
 };

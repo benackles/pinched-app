@@ -352,6 +352,41 @@ export function parseIngredientList(lines: readonly string[]): ParsedIngredient[
   return out;
 }
 
+/**
+ * Like `parseIngredientList`, but a line the parser cannot read is kept as typed (no quantity)
+ * instead of vanishing — used for anything a person enters or imports, where "never silently
+ * drop an ingredient" applies.
+ */
+export function parseIngredientListLossless(lines: readonly string[]): ParsedIngredient[] {
+  const out: ParsedIngredient[] = [];
+  let group: string | null = null;
+  for (const line of lines) {
+    const parsedLines = parseIngredientLine(line);
+    if (parsedLines.length === 0) {
+      const text = cleanRaw(line);
+      if (!text) continue;
+      const normalized = normalizeIngredientName(text) || text.toLowerCase();
+      out.push({
+        quantity: null,
+        quantity_max: null,
+        unit: null,
+        name: cleanDisplayName(text) || text,
+        normalized_name: normalized,
+        preparation: null,
+        raw_text: text,
+        grocery_section: classifySection(normalized),
+        group_label: group,
+      });
+      continue;
+    }
+    for (const parsed of parsedLines) {
+      if (parsed.kind === "header") group = parsed.label || null;
+      else out.push({ ...parsed.ingredient, group_label: group });
+    }
+  }
+  return out;
+}
+
 // ─────────────────────────────── display ───────────────────────────────
 
 /** "1½ cups jasmine rice, sliced" — falls back to the recipe's own wording when there is no number. */

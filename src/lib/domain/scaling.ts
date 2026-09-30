@@ -1,3 +1,5 @@
+import { fromBase, pickMeasured, toBase, unitKind } from "./units";
+
 /**
  * Serving math. The rule (PRD): scale to each meal's servings; if scaling is uncertain, keep the
  * original; never invent quantities.
@@ -24,6 +26,32 @@ export function scaleFactor(
 
 export function scaleQuantity(quantity: number | null, factor: number): number | null {
   return quantity === null ? null : quantity * factor;
+}
+
+/**
+ * An ingredient scaled for display ("serves 6" instead of 4). Measured amounts move to the unit
+ * cooks would actually reach for (½ cup, not 8 tbsp); counts and named units keep their unit;
+ * a line with no quantity ("salt to taste") is returned untouched — never invent an amount.
+ */
+export function scaleIngredient<
+  T extends { quantity: number | null; quantity_max?: number | null; unit: string | null },
+>(ingredient: T, factor: number): T {
+  if (ingredient.quantity === null || factor === 1 || !Number.isFinite(factor)) return ingredient;
+  const kind = unitKind(ingredient.unit);
+  const quantity = ingredient.quantity * factor;
+  const max =
+    ingredient.quantity_max !== null && ingredient.quantity_max !== undefined
+      ? ingredient.quantity_max * factor
+      : null;
+  if ((kind === "volume" || kind === "mass") && ingredient.unit) {
+    const picked = pickMeasured(toBase(quantity, ingredient.unit), kind, [ingredient.unit]);
+    const scaledMax =
+      max === null
+        ? null
+        : Math.round(fromBase(toBase(max, ingredient.unit), picked.unit) * 100) / 100;
+    return { ...ingredient, quantity: picked.quantity, quantity_max: scaledMax, unit: picked.unit };
+  }
+  return { ...ingredient, quantity, quantity_max: max };
 }
 
 /** First whole number in a yield string: "4 servings" → 4, "Makes 12 muffins" → 12, "4-6" → 4. */

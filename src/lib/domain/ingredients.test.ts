@@ -378,3 +378,32 @@ describe("formatIngredient", () => {
     expect(formatIngredient(one("Kosher salt, to taste"))).toBe("Kosher salt, to taste");
   });
 });
+
+describe("parseIngredientListLossless", () => {
+  it("keeps every line, even ones the parser cannot read", async () => {
+    const { parseIngredientListLossless } = await import("./ingredients");
+    const lines = [
+      "2 cups rice",
+      "For the sauce:",
+      "1 tbsp soy sauce",
+      "salt & pepper",
+      "a knob of butter",
+    ];
+    const parsed = parseIngredientListLossless(lines);
+    // "salt & pepper" is two ingredients that share one source line.
+    expect(parsed.map((p) => p.raw_text)).toEqual([
+      "2 cups rice",
+      "1 tbsp soy sauce",
+      "salt & pepper",
+      "salt & pepper",
+      "a knob of butter",
+    ]);
+    expect(parsed[1]?.group_label).toBe("For the sauce");
+    expect(parsed.every((p) => p.name && p.normalized_name)).toBe(true);
+  });
+
+  it("drops only blank lines", async () => {
+    const { parseIngredientListLossless } = await import("./ingredients");
+    expect(parseIngredientListLossless(["", "   ", "1 egg"])).toHaveLength(1);
+  });
+});

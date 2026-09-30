@@ -37,7 +37,14 @@ export function toActionError(error: unknown): ActionResult<never> {
   // redirect() / notFound() are control flow, not failures.
   unstable_rethrow(error);
 
-  if (error instanceof ActionFailure) return fail(error.code, error.message, error.extra);
+  if (error instanceof ActionFailure) {
+    const feature = error.extra.feature;
+    const message =
+      error.message ||
+      (error.code === "free_limit" && feature ? FREE_LIMIT_MESSAGES[feature] : undefined) ||
+      "Something went wrong. Please try again.";
+    return fail(error.code, message, error.extra);
+  }
   if (error instanceof ZodError) {
     const fields = fieldErrors(error);
     return fail("validation", Object.values(fields)[0] ?? "Check the highlighted fields.", {
@@ -54,6 +61,9 @@ export function toActionError(error: unknown): ActionResult<never> {
       );
     }
     const rate = /^limit_exceeded:(.+)$/.exec(error.message);
+    if (rate && rate[1]!.startsWith("url_import:")) {
+      return fail("free_limit", FREE_LIMIT_MESSAGES.url_import!, { feature: "url_import" });
+    }
     if (rate) {
       return fail("rate_limit", "You've hit today's limit for that. Try again tomorrow.", {
         feature: rate[1]!,

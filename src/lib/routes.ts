@@ -6,3 +6,12 @@ import type { Route } from "next";
  */
 export const SIGN_IN = "/sign-in" as Route;
 export const SIGN_UP = "/sign-up" as Route;
+
+/** A weekly screen for a given week; the current week uses the bare path. */
+export function withWeek(
+  path: "/plan" | "/grocery-list" | "/prep",
+  week: string,
+  currentWeek: string,
+): Route {
+  return (week === currentWeek ? path : `${path}?week=${week}`) as Route;
+}

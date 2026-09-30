@@ -531,6 +531,7 @@ const existing = (over: Partial<ExistingPrepTask> & { id: string }): ExistingPre
   completed_at: null,
   is_custom: false,
   is_edited: false,
+  is_removed: false,
   ...over,
 });
 
@@ -663,5 +664,40 @@ describe("regeneration keeps manual changes (PRD)", () => {
       id: null,
       is_completed: false,
     });
+  });
+});
+
+describe("deleted prep tasks stay deleted", () => {
+  it("keeps a tombstone instead of bringing a deleted task back", () => {
+    const result = mergePrepRegeneration(
+      [existing({ id: "t1", generation_key: "cut:onion", is_removed: true })],
+      [draft("cut:onion"), draft("grain:rice")],
+      { manuallyOrdered: false },
+    );
+    const visible = result.tasks.filter((t) => !t.is_removed);
+    expect(visible.map((t) => t.generation_key)).toEqual(["grain:rice"]);
+    const tombstone = result.tasks.find((t) => t.generation_key === "cut:onion");
+    expect(tombstone).toMatchObject({ id: "t1", is_removed: true });
+    expect(result.deleteIds).toEqual([]);
+  });
+
+  it("cleans the tombstone up once the plan no longer produces that task", () => {
+    const result = mergePrepRegeneration(
+      [existing({ id: "t1", generation_key: "cut:onion", is_removed: true })],
+      [draft("grain:rice")],
+      { manuallyOrdered: false },
+    );
+    expect(result.deleteIds).toEqual(["t1"]);
+    expect(result.tasks.some((t) => t.id === "t1")).toBe(false);
+  });
+
+  it("does not turn a deleted-and-edited task into a custom one", () => {
+    const result = mergePrepRegeneration(
+      [existing({ id: "t1", generation_key: "cut:onion", is_removed: true, is_edited: true })],
+      [],
+      { manuallyOrdered: false },
+    );
+    expect(result.tasks).toEqual([]);
+    expect(result.deleteIds).toEqual(["t1"]);
   });
 });

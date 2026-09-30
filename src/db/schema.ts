@@ -757,6 +757,8 @@ export const prep_tasks = pgTable(
     is_custom: boolean().notNull().default(false),
     /** A generated task the user changed — regeneration keeps their version. */
     is_edited: boolean().notNull().default(false),
+    /** Tombstone: a generated task the user deleted stays deleted when the plan regenerates. */
+    is_removed: boolean().notNull().default(false),
     created_at: createdAt(),
     /** Set explicitly by actions (client timestamp) so offline replays resolve last-write-wins. */
     updated_at: updatedAt(),

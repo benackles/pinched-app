@@ -830,6 +830,8 @@ export type ExistingPrepTask = {
   completed_at: string | null;
   is_custom: boolean;
   is_edited: boolean;
+  /** Tombstone: a generated task the person deleted stays deleted when the plan regenerates. */
+  is_removed: boolean;
 };
 
 export type MergedPrepTask = {
@@ -845,6 +847,7 @@ export type MergedPrepTask = {
   completed_at: string | null;
   is_custom: boolean;
   is_edited: boolean;
+  is_removed: boolean;
   /** Meal links to replace; null = leave the task's existing links alone. */
   meals: PrepMealRef[] | null;
 };
@@ -876,6 +879,7 @@ export function mergePrepRegeneration(
   const used = new Set<string>();
   const generated: MergedPrepTask[] = [];
   const fresh: MergedPrepTask[] = [];
+  const tombstones: MergedPrepTask[] = [];
 
   for (const draft of drafts) {
     const current = byKey.get(draft.generation_key);
@@ -892,11 +896,17 @@ export function mergePrepRegeneration(
         completed_at: null,
         is_custom: false,
         is_edited: false,
+        is_removed: false,
         meals: draft.meals,
       });
       continue;
     }
     used.add(current.id);
+    if (current.is_removed) {
+      // Deleted by the person: keep the tombstone so it does not come back.
+      tombstones.push({ ...current, meals: null });
+      continue;
+    }
     generated.push({
       id: current.id,
       generation_key: draft.generation_key,
@@ -909,6 +919,7 @@ export function mergePrepRegeneration(
       completed_at: current.completed_at,
       is_custom: false,
       is_edited: current.is_edited,
+      is_removed: false,
       meals: draft.meals,
     });
   }
@@ -918,7 +929,7 @@ export function mergePrepRegeneration(
   for (const task of existing) {
     if (task.is_custom || !task.generation_key || used.has(task.id) || deleteIds.includes(task.id))
       continue;
-    if (task.is_edited) {
+    if (task.is_edited && !task.is_removed) {
       converted.push({
         ...task,
         generation_key: null,
@@ -955,7 +966,7 @@ export function mergePrepRegeneration(
   }
 
   return {
-    tasks: ordered.map((task, index) => ({ ...task, sort_order: index })),
+    tasks: [...ordered, ...tombstones].map((task, index) => ({ ...task, sort_order: index })),
     deleteIds,
     clearMealsFor,
   };

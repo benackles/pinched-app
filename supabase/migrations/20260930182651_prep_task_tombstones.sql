@@ -1,0 +1,1 @@
+ALTER TABLE "prep_tasks" ADD COLUMN "is_removed" boolean DEFAULT false NOT NULL;
