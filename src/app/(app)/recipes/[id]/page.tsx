@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { RecipeImage } from "@/components/recipes/recipe-image";
 import { RecipeActions, RecipeRating } from "@/components/recipes/recipe-actions";
+import { RecipePhotos } from "@/components/recipes/recipe-photos";
 import {
   RecipeTabs,
   type CookingView,
@@ -12,6 +13,7 @@ import {
   type NoteView,
   type VersionView,
 } from "@/components/recipes/recipe-tabs";
+import { FREE_LIMITS } from "@/lib/domain/constants";
 import type { RecipeChanges } from "@/lib/domain/types";
 import { currentWeekStart, dayName, todayInZone } from "@/lib/domain/week";
 import { formatMinutes } from "@/lib/format";
@@ -19,7 +21,8 @@ import { dayOptions } from "@/lib/plan";
 import { formatIngredientLines } from "@/lib/recipes/draft";
 import { uuid } from "@/lib/validation/common";
 import { requireSession } from "@/server/auth";
-import { getProfile, getTimezone } from "@/server/profile";
+import { mediaStore } from "@/server/media/store";
+import { getProfile, getTimezone, isPro } from "@/server/profile";
 import { getRecipeDetail } from "@/server/queries/recipes";
 import { userClient } from "@/server/supabase";
 
@@ -89,6 +92,24 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
     rating: c.rating,
     note: c.note,
   }));
+
+  // Photos and video belong to a recipe in the person's book; links are signed fresh on each visit.
+  let photos: React.ReactNode;
+  if (saved) {
+    const links = await mediaStore(db).sign(detail.media.map((m) => m.storage_path));
+    photos = (
+      <RecipePhotos
+        recipeId={recipe.id}
+        title={recipe.title}
+        items={detail.media.map((m) => ({
+          id: m.id,
+          kind: m.kind === "video" ? "video" : "photo",
+          url: links.get(m.storage_path) ?? null,
+        }))}
+        limit={(await isPro()) ? null : FREE_LIMITS.mediaPerRecipe}
+      />
+    );
+  }
 
   const thisWeek = currentWeekStart(tz);
   const host = hostOf(recipe.source_url);
@@ -198,6 +219,8 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
         version={version}
         notes={notes}
         cooking={cooking}
+        photos={photos}
+        photoCount={detail.media.length}
       />
     </>
   );

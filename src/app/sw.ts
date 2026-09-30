@@ -52,6 +52,9 @@ const USER_SCOPED_CACHES = [CACHE.pages, CACHE.pagesRsc, CACHE.data, CACHE.media
 /** Paths that must never be served from or written to a cache. */
 const NEVER_CACHE = /^\/(?:api|sign-in|sign-up|sign-out|_clerk|~offline)(?:\/|$)/;
 
+/** Local demo mode serves uploaded media from here (production uses Supabase Storage). */
+const LOCAL_MEDIA_PATH = "/api/local/storage/";
+
 const SW_TIMEOUT_SECONDS = 4;
 const FOURTEEN_DAYS = 60 * 60 * 24 * 14;
 
@@ -69,9 +72,11 @@ const isCacheablePage = ({
   (request.mode === "navigate" || request.headers.get("x-pinched-warm") === "1");
 
 const runtimeCaching: RuntimeCaching[] = [
-  // Auth, import, Stripe and every other API route: always the network, never stored.
+  // Auth, import, Stripe and every other API route: always the network, never stored. The one
+  // exception is local demo mode's media route, which stands in for Supabase Storage below.
   {
-    matcher: ({ sameOrigin, url }) => sameOrigin && NEVER_CACHE.test(url.pathname),
+    matcher: ({ sameOrigin, url }) =>
+      sameOrigin && NEVER_CACHE.test(url.pathname) && !url.pathname.startsWith(LOCAL_MEDIA_PATH),
     handler: new NetworkOnly(),
   },
   // Page navigations (and the post-login route warm-up): fresh online, cached copy with no signal.
@@ -124,9 +129,10 @@ const runtimeCaching: RuntimeCaching[] = [
   {
     matcher: ({ request, url }) =>
       request.method === "GET" &&
-      (url.pathname.includes("/storage/v1/object/") ||
-        url.pathname.startsWith("/api/local/storage/")) &&
-      request.destination !== "document",
+      (url.pathname.includes("/storage/v1/object/") || url.pathname.startsWith(LOCAL_MEDIA_PATH)) &&
+      request.destination !== "document" &&
+      // Video is streamed with Range requests (Safari insists on 206s); leave those to the network.
+      !request.headers.has("range"),
     method: "GET",
     handler: new CacheFirst({
       cacheName: CACHE.media,

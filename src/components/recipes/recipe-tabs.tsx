@@ -60,7 +60,9 @@ type Props = {
   version: VersionView | null;
   notes: NoteView[];
   cooking: CookingView[];
+  /** The Photos tab's content; omitted for recipes that aren't in the person's book. */
   photos?: React.ReactNode;
+  photoCount?: number;
 };
 
 const formatDate = (iso: string) =>
@@ -68,7 +70,7 @@ const formatDate = (iso: string) =>
     new Date(iso),
   );
 
-export function RecipeTabs({ photos, ...props }: Props) {
+export function RecipeTabs({ photos, photoCount = 0, ...props }: Props) {
   return (
     <Tabs defaultValue="recipe" className="mt-10">
       <TabsList className="max-w-full overflow-x-auto">
@@ -80,7 +82,9 @@ export function RecipeTabs({ photos, ...props }: Props) {
         <TabsTrigger value="history">
           History{props.cooking.length ? ` (${props.cooking.length})` : ""}
         </TabsTrigger>
-        {photos && <TabsTrigger value="photos">Photos</TabsTrigger>}
+        {photos && (
+          <TabsTrigger value="photos">Photos{photoCount ? ` (${photoCount})` : ""}</TabsTrigger>
+        )}
       </TabsList>
       <TabsContent value="recipe" className="mt-6">
         <RecipeBody {...props} />

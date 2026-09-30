@@ -1,7 +1,9 @@
 import "server-only";
 
+import { must, mustOk } from "@/server/db";
+import { removeObjects } from "@/server/media/cleanup";
+import { mediaStore, type MediaStore } from "@/server/media/store";
 import type { Supabase } from "@/server/supabase";
-import { mustOk } from "@/server/db";
 
 export type ClerkUserData = {
   id: string;
@@ -28,14 +30,18 @@ function primaryEmail(data: ClerkUserData) {
 }
 
 /** Everything a person owns, removed. Roots are deleted and foreign keys cascade to the rest. */
-export async function purgeUserData(admin: Supabase, userId: string): Promise<void> {
-  // Uploaded photos and videos live in Storage, in the person's own folder.
-  const { data: media } = await admin
-    .from("recipe_media")
-    .select("storage_path")
-    .eq("user_id", userId);
-  const paths = (media ?? []).map((m) => m.storage_path);
-  if (paths.length) await admin.storage.from("recipe-media").remove(paths);
+export async function purgeUserData(
+  admin: Supabase,
+  userId: string,
+  media: MediaStore = mediaStore(admin),
+): Promise<void> {
+  // Uploaded photos and videos live in Storage, in the person's own folder. Files go first, and a
+  // failure aborts the purge (so the webhook is retried) rather than leaving personal files behind.
+  const files = must(await admin.from("recipe_media").select("storage_path").eq("user_id", userId));
+  await removeObjects(
+    media,
+    files.map((row) => row.storage_path),
+  );
 
   mustOk(await admin.from("weekly_plans").delete().eq("user_id", userId)); // meals, lists, prep plans…
   mustOk(await admin.from("saved_recipes").delete().eq("user_id", userId)); // notes, versions, history…
@@ -54,7 +60,12 @@ export async function purgeUserData(admin: Supabase, userId: string): Promise<vo
 /** Clerk → profiles. The event is already signature-verified by the route. */
 export async function handleClerkEvent(
   event: ClerkUserEvent,
-  deps: { admin: Supabase; cancelSubscriptions?: (userId: string) => Promise<void> },
+  deps: {
+    admin: Supabase;
+    cancelSubscriptions?: (userId: string) => Promise<void>;
+    /** Where the person's photos and video live; defaults to the deployment's store. */
+    media?: MediaStore;
+  },
 ): Promise<{ handled: boolean; detail: string }> {
   switch (event.type) {
     case "user.created":
@@ -77,7 +88,7 @@ export async function handleClerkEvent(
       if (!id) return { handled: false, detail: "no user id" };
       // Stop billing first; if that fails the error surfaces and Clerk retries the webhook.
       await deps.cancelSubscriptions?.(id);
-      await purgeUserData(deps.admin, id);
+      await purgeUserData(deps.admin, id, deps.media);
       return { handled: true, detail: "user data deleted" };
     }
   }

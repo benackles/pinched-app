@@ -43,6 +43,20 @@
       "when": 1790792811280,
       "tag": "20260930182651_prep_task_tombstones",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790795462796,
+      "tag": "20260930191102_media_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790795472422,
+      "tag": "20260930191112_media_bucket_limits",
+      "breakpoints": true
     }
   ]
 }

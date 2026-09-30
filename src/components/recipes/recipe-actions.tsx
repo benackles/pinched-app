@@ -226,7 +226,7 @@ export function RecipeActions({
             <AlertDialogDescription>
               {confirm === "delete"
                 ? "This permanently deletes the recipe and takes it out of any planned weeks, grocery lists and prep plans."
-                : "It will also come off any week you've planned it in, along with the grocery items and prep tasks made from it. Your notes and version go too."}
+                : "It will also come off any week you've planned it in, along with the grocery items and prep tasks made from it. Your notes, version and photos go too."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -15,7 +15,7 @@
  * Property names are snake_case on purpose: they match the columns PostgREST returns, so the
  * inferred row types in `types.ts` are exactly what supabase-js hands back.
  */
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 import {
   boolean,
   check,
@@ -66,8 +66,11 @@ const tstz = () => timestamp({ withTimezone: true, mode: "string" });
 const createdAt = () => tstz().notNull().defaultNow();
 const updatedAt = () => tstz().notNull().defaultNow();
 
-/** select / insert / update / delete own rows — the standard policy set for user tables. */
-const ownRows = (table: string) => [
+/**
+ * select / insert / update / delete own rows — the standard policy set for user tables.
+ * `insertCheck` adds a condition new rows must also meet; `update: false` leaves rows immutable.
+ */
+const ownRows = (table: string, options: { insertCheck?: SQL; update?: boolean } = {}) => [
   pgPolicy(`${table}: select own`, {
     for: "select",
     to: authenticated,
@@ -76,14 +79,20 @@ const ownRows = (table: string) => [
   pgPolicy(`${table}: insert own`, {
     for: "insert",
     to: authenticated,
-    withCheck: sql`user_id = ${sub}`,
+    withCheck: options.insertCheck
+      ? sql`user_id = ${sub} and ${options.insertCheck}`
+      : sql`user_id = ${sub}`,
   }),
-  pgPolicy(`${table}: update own`, {
-    for: "update",
-    to: authenticated,
-    using: sql`user_id = ${sub}`,
-    withCheck: sql`user_id = ${sub}`,
-  }),
+  ...(options.update === false
+    ? []
+    : [
+        pgPolicy(`${table}: update own`, {
+          for: "update",
+          to: authenticated,
+          using: sql`user_id = ${sub}`,
+          withCheck: sql`user_id = ${sub}`,
+        }),
+      ]),
   pgPolicy(`${table}: delete own`, {
     for: "delete",
     to: authenticated,
@@ -483,7 +492,11 @@ export const recipe_media = pgTable(
     check("recipe_media_path_check", sql`starts_with(${t.storage_path}, ${t.user_id} || '/')`),
     unique("recipe_media_path_key").on(t.storage_path),
     index("recipe_media_recipe_idx").on(t.recipe_id, t.user_id),
-    ...ownRows("recipe_media"),
+    // Media hangs off a recipe in your book, and is never edited — only added and removed.
+    ...ownRows("recipe_media", {
+      insertCheck: sql`public.has_saved_recipe(recipe_id)`,
+      update: false,
+    }),
   ],
 );
 

@@ -11,7 +11,9 @@ import { dnsResolver, nodeTransport } from "@/lib/recipe-import/transport";
 import { importRecipe } from "@/lib/recipe-import/import";
 import { importUrlSchema, recipeFormSchema } from "@/lib/validation/recipes";
 import { uuid } from "@/lib/validation/common";
+import { requireSession } from "@/server/auth";
 import { must, mustMaybe, mustOk } from "@/server/db";
+import { removeRecipeMediaFiles } from "@/server/media/cleanup";
 import { getTimezone, isPro } from "@/server/profile";
 import { createOwnRecipe, ensureSaved, replaceOwnRecipe } from "@/server/recipes/content";
 import { userClient } from "@/server/supabase";
@@ -40,6 +42,9 @@ export async function unsaveRecipe(recipeId: string) {
   return runAction(async () => {
     const id = uuid.parse(recipeId);
     const db = await userClient();
+    // Photos and video are part of the person's copy: they go with it (files first).
+    await removeRecipeMediaFiles(db, id);
+    mustOk(await db.from("recipe_media").delete().eq("recipe_id", id));
     mustOk(await db.from("saved_recipes").delete().eq("recipe_id", id));
     refreshRecipes(id);
     revalidatePath("/grocery-list");
@@ -111,6 +116,17 @@ export async function deleteOwnRecipe(recipeId: string) {
   return runAction(async () => {
     const id = uuid.parse(recipeId);
     const db = await userClient();
+    // Only your own recipes can be deleted; clear their photo files first (the rows cascade).
+    const session = await requireSession();
+    const own = mustMaybe(
+      await db
+        .from("recipes")
+        .select("id")
+        .eq("id", id)
+        .eq("owner_id", session.userId)
+        .maybeSingle(),
+    );
+    if (own) await removeRecipeMediaFiles(db, id);
     const deleted = must(await db.from("recipes").delete().eq("id", id).select("id"));
     if (deleted.length !== 1) {
       throw new ActionFailure("not_found", "You can only delete recipes you added yourself.");

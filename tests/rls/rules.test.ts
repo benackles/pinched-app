@@ -8,6 +8,7 @@ import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { FREE_LIMITS } from "@/lib/domain/constants";
+import { ACCEPTED_CONTENT_TYPES, MAX_VIDEO_BYTES } from "@/lib/media/upload";
 
 import { asAnon, asService, asUser, createTestDb, pgError, type Db } from "../support/db";
 import { ALICE, BOB, id, ids, seedTwoTenants } from "../support/fixtures";
@@ -542,6 +543,9 @@ describe("free-tier limits (database triggers)", () => {
 
   it("allows one photo or video per recipe for free accounts", async () => {
     const u = "user_shutterbug";
+    await asUser(db, u, (tx) =>
+      tx.query("insert into saved_recipes (recipe_id) values ($1)", [ids.seededPublished]),
+    );
     const media = (file: string) =>
       asUser(db, u, async (tx) => {
         await tx.query(
@@ -612,6 +616,16 @@ describe("storage (recipe-media bucket)", () => {
     expect(rows[0]!.allowed_mime_types).not.toContain("text/html");
   });
 
+  it("accepts exactly what the app accepts, at the size the app allows", async () => {
+    const { rows } = await asService(db, (tx) =>
+      tx.query<{ allowed_mime_types: string[]; file_size_limit: number }>(
+        "select allowed_mime_types, file_size_limit from storage.buckets where id = 'recipe-media'",
+      ),
+    );
+    expect([...rows[0]!.allowed_mime_types].sort()).toEqual([...ACCEPTED_CONTENT_TYPES].sort());
+    expect(Number(rows[0]!.file_size_limit)).toBe(MAX_VIDEO_BYTES);
+  });
+
   it("lets a user write and read only inside their own folder", async () => {
     expect(await pgError(() => put(ALICE, `${ALICE}/${ids.seededPublished}/a.jpg`))).toBeNull();
     expect((await pgError(() => put(ALICE, `${BOB}/${ids.seededPublished}/evil.jpg`)))?.code).toBe(
@@ -651,6 +665,58 @@ describe("storage (recipe-media bucket)", () => {
       ),
     );
     expect(error?.code).toBe("23514");
+  });
+});
+
+describe("recipe media rows", () => {
+  const attach = (user: string, recipeId: string, name = "x.jpg") =>
+    asUser(db, user, (tx) =>
+      tx.query(
+        "insert into recipe_media (recipe_id, kind, storage_path) values ($1, 'photo', $2) returning id",
+        [recipeId, `${user}/${recipeId}/${name}`],
+      ),
+    );
+
+  it("attach only to a recipe in the person's own book", async () => {
+    const stranger = "user_no_book";
+    // Not saved: refused, for a catalog recipe and for someone else's private recipe alike.
+    expect((await pgError(() => attach(stranger, ids.seededPublished)))?.code).toBe("42501");
+    expect((await pgError(() => attach(stranger, ids.bobRecipe)))?.code).toBe("42501");
+    // Alice saved the catalog recipe and owns + saved her own: allowed.
+    expect(await pgError(() => attach(ALICE, ids.aliceRecipe, "ok.jpg"))).toBeNull();
+    // Alice never saved Bob's private recipe (she can't even see it).
+    expect((await pgError(() => attach(ALICE, ids.bobRecipe)))?.code).toBe("42501");
+  });
+
+  it("are readable and removable by their owner only", async () => {
+    const seen = await asUser(db, ALICE, async (tx) =>
+      (await tx.query<{ user_id: string }>("select user_id from recipe_media")).rows.map(
+        (r) => r.user_id,
+      ),
+    );
+    expect(new Set(seen)).toEqual(new Set([ALICE]));
+
+    const deleted = await asUser(db, ALICE, (tx) =>
+      tx.query(`delete from recipe_media where user_id = '${BOB}' returning id`),
+    );
+    expect(deleted.rows).toHaveLength(0);
+  });
+
+  it("are never edited — a row cannot be re-pointed at another recipe", async () => {
+    const error = await pgError(() =>
+      asUser(db, ALICE, (tx) =>
+        tx.query("update recipe_media set recipe_id = $1 where user_id = $2", [
+          ids.aliceRecipe,
+          ALICE,
+        ]),
+      ),
+    );
+    expect(error?.code).toBe("42501");
+  });
+
+  it("are refused for anonymous callers", async () => {
+    const error = await pgError(() => asAnon(db, (tx) => tx.query("select * from recipe_media")));
+    expect(error?.code).toBe("42501");
   });
 });
 

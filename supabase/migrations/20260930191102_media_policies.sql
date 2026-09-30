@@ -1,0 +1,2 @@
+DROP POLICY "recipe_media: update own" ON "recipe_media" CASCADE;--> statement-breakpoint
+ALTER POLICY "recipe_media: insert own" ON "recipe_media" TO authenticated WITH CHECK (user_id = (select auth.jwt() ->> 'sub') and public.has_saved_recipe(recipe_id));

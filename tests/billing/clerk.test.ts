@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@/db/types";
 import { handleClerkEvent, purgeUserData } from "@/server/clerk/webhook";
 import { signJwt, verifyJwt } from "@/server/local/jwt";
+import type { MediaStore } from "@/server/media/store";
 import { handlePostgrest, type Queryable } from "@/server/local/postgrest/handler";
 
 import { createTestDb, type Db } from "../support/db";
@@ -31,6 +32,26 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close();
 });
+
+/** A storage double that records what was asked of it, and can be made to fail. */
+function fakeStore(
+  options: { fail?: boolean; onRemove?: (paths: string[]) => Promise<void> } = {},
+) {
+  const removed: string[] = [];
+  const store: MediaStore = {
+    createUpload: async () => {
+      throw new Error("not used");
+    },
+    info: async () => null,
+    sign: async () => new Map(),
+    remove: async (paths) => {
+      await options.onRemove?.(paths);
+      if (options.fail) throw new Error("storage unavailable");
+      removed.push(...paths);
+    },
+  };
+  return { store, removed };
+}
 
 const count = async (table: string, column: string, user: string) =>
   (
@@ -118,12 +139,19 @@ describe("Clerk webhook", () => {
     expect(before.filter((n) => n > 0).length).toBeGreaterThan(15); // the fixture really populated them
 
     const cancelled: string[] = [];
+    const files = fakeStore();
     const result = await handleClerkEvent(
       { type: "user.deleted", data: { id: ALICE, deleted: true } },
-      { admin: admin(), cancelSubscriptions: async (id) => void cancelled.push(id) },
+      {
+        admin: admin(),
+        media: files.store,
+        cancelSubscriptions: async (id) => void cancelled.push(id),
+      },
     );
     expect(result.handled).toBe(true);
     expect(cancelled).toEqual([ALICE]); // billing is stopped first
+    // Their photos and videos are removed from storage too — and only theirs.
+    expect(files.removed).toEqual([`${ALICE}/published/a.jpg`]);
 
     for (const [table, column] of USER_TABLES) {
       expect(
@@ -155,6 +183,7 @@ describe("Clerk webhook", () => {
         { type: "user.deleted", data: { id: BOB } },
         {
           admin: admin(),
+          media: fakeStore().store,
           cancelSubscriptions: async () => {
             throw new Error("stripe unavailable");
           },
@@ -164,8 +193,29 @@ describe("Clerk webhook", () => {
     expect(await count("profiles", "user_id", BOB)).toBe(1);
   });
 
+  it("removes files before rows, and keeps everything if storage fails (Clerk will retry)", async () => {
+    // Files first: when storage is asked to remove them, the database rows still exist.
+    let rowsWhenRemoving = -1;
+    const files = fakeStore({
+      onRemove: async () => {
+        rowsWhenRemoving = await count("recipe_media", "user_id", BOB);
+      },
+    });
+    const failing = fakeStore({ fail: true });
+    await expect(purgeUserData(admin(), BOB, failing.store)).rejects.toThrow("storage unavailable");
+    // Nothing was deleted, so the retry can finish the job.
+    expect(await count("profiles", "user_id", BOB)).toBe(1);
+    expect(await count("recipe_media", "user_id", BOB)).toBe(1);
+
+    await purgeUserData(admin(), BOB, files.store);
+    expect(rowsWhenRemoving).toBe(1);
+    expect(files.removed).toEqual([`${BOB}/published/b.jpg`]);
+    expect(await count("profiles", "user_id", BOB)).toBe(0);
+  });
+
   it("purgeUserData is safe to run twice", async () => {
-    await purgeUserData(admin(), ALICE);
-    await purgeUserData(admin(), ALICE);
+    const { store } = fakeStore();
+    await purgeUserData(admin(), ALICE, store);
+    await purgeUserData(admin(), ALICE, store);
   });
 });

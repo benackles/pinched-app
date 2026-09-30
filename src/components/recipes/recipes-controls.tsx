@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Input, NativeSelect } from "@/components/ui/form-controls";
 import type { Route } from "next";
@@ -27,14 +27,14 @@ function useUrlParams() {
 export function RecipeSearch({ placeholder }: { placeholder: string }) {
   const { params, replace } = useUrlParams();
   const [value, setValue] = useState(params.get("q") ?? "");
-  const first = useRef(true);
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    const id = setTimeout(() => replace({ q: value.trim() || null }), 300);
+    // Only touch the URL when the search actually differs from it. (Comparing, rather than
+    // skipping the first run, matters: React Strict Mode runs effects twice in development, and a
+    // same-URL replace 300ms after load would cancel a link the person just clicked.)
+    const next = value.trim() || null;
+    if (next === (params.get("q") || null)) return;
+    const id = setTimeout(() => replace({ q: next }), 300);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- replace is stable enough; re-running on it would loop
   }, [value]);
