@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+coverage
+playwright-report
+test-results
+pnpm-lock.yaml
+public/sw.js
+supabase/migrations
+supabase/seed.sql
+src/app/fonts
+data/catalog/*.generated.*

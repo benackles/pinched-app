@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Pinched design tokens — a well-loved cookbook: warm cream paper, ink-brown type,
+ * tomato-red accent, sage green for "today" and success. Values come straight from the
+ * PRD / Lovable prototype. No gradients anywhere.
+ */
+
+@theme inline {
+  --font-display: var(--font-fraunces), "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: var(--font-figtree), "Figtree", ui-sans-serif, system-ui, sans-serif;
+
+  /* base radius 16px; rounded-3xl day sections, rounded-2xl cards, rounded-xl thumbnails */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-strong: var(--primary-strong);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-strong: var(--success-strong);
+  --color-star: var(--star);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Two soft warm shadows: resting and hover/dialog */
+  --shadow-card: 0 1px 2px oklch(0.3 0.03 50 / 0.06), 0 4px 16px oklch(0.3 0.03 50 / 0.05);
+  --shadow-lift: 0 2px 4px oklch(0.3 0.03 50 / 0.08), 0 12px 32px oklch(0.3 0.03 50 / 0.1);
+}
+
+:root {
+  --radius: 1rem;
+
+  --background: oklch(0.975 0.012 80); /* cream page */
+  --foreground: oklch(0.24 0.025 50); /* ink-brown text */
+  --card: oklch(0.995 0.005 85);
+  --card-foreground: oklch(0.24 0.025 50);
+  --popover: oklch(0.995 0.005 85);
+  --popover-foreground: oklch(0.24 0.025 50);
+
+  --primary: oklch(0.6 0.17 35); /* tomato: CTAs, eyebrows, meal type, wordmark dot */
+  --primary-foreground: oklch(0.99 0.01 80);
+  --secondary: oklch(0.93 0.025 80); /* day sections, secondary buttons, active nav pill */
+  --secondary-foreground: oklch(0.3 0.03 50);
+  --muted: oklch(0.94 0.018 80);
+  --muted-foreground: oklch(0.5 0.025 55);
+  --accent: oklch(0.9 0.05 135); /* sage: today's day section */
+  --accent-foreground: oklch(0.32 0.06 140);
+  --success: oklch(0.55 0.11 145); /* "Prepped" chip, completed tasks */
+  --success-foreground: oklch(0.99 0.01 80);
+  --destructive: oklch(0.55 0.2 27);
+  --destructive-foreground: oklch(0.99 0.01 80);
+  --star: oklch(0.75 0.15 75); /* ratings */
+  --border: oklch(0.89 0.02 75); /* hairlines and inputs */
+  --input: oklch(0.89 0.02 75);
+  --ring: oklch(0.6 0.17 35);
+
+  /*
+   * Derived AA-safe variants (PRD: "text contrast at WCAG AA on cream").
+   * The PRD's tomato measures 3.96:1 on the cream page and 4.14:1 under white button labels,
+   * and the success green 4.49:1 under white chip text — just short of 4.5:1 for small text.
+   * Brand accents, icons, rings and large display type keep the exact PRD tokens above;
+   * small tomato text, filled buttons and chips use these, a ~4% lightness step darker.
+   *   --primary-strong  4.69:1 on cream · 4.97:1 on card · 4.89:1 white-on-fill
+   *   --success-strong  5.10:1 white-on-fill
+   */
+  --primary-strong: oklch(0.56 0.17 35);
+  --success-strong: oklch(0.52 0.11 145);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  button,
+  [role="button"],
+  a {
+    touch-action: manipulation;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Keep small visual controls tappable: grows the hit area to 44px without changing layout. */
+@utility hit-44 {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    min-width: 44px;
+    min-height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Desktop installed PWA with window-controls-overlay: keep header content clear of the
+   OS window buttons and make the header a drag region (interactive children opt out). */
+@media (display-mode: window-controls-overlay) {
+  .app-header {
+    -webkit-app-region: drag;
+    app-region: drag;
+    padding-left: env(titlebar-area-x, 0px);
+    padding-right: calc(100% - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100%));
+  }
+  .app-header a,
+  .app-header button,
+  .app-header [role="menuitem"] {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+}
