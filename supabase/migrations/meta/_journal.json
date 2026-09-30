@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790788770305,
+      "tag": "20260930171930_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790788772150,
+      "tag": "20260930171932_grants_functions_triggers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790788774263,
+      "tag": "20260930171934_storage_media",
+      "breakpoints": true
+    }
+  ]
+}
