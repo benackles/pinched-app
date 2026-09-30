@@ -1,29 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import type { Database } from "@/db/types";
 import { handleClerkEvent, purgeUserData } from "@/server/clerk/webhook";
-import { signJwt, verifyJwt } from "@/server/local/jwt";
 import type { MediaStore } from "@/server/media/store";
-import { handlePostgrest, type Queryable } from "@/server/local/postgrest/handler";
 
+import { serviceClient } from "../support/admin";
 import { createTestDb, type Db } from "../support/db";
 import { ALICE, BOB, seedTwoTenants } from "../support/fixtures";
 
-const SECRET = "clerk-test";
 let db: Db;
 
-const admin = () =>
-  createClient<Database>("http://shim.test", signJwt({ role: "anon" }, SECRET, 600), {
-    accessToken: async () => signJwt({ role: "service_role" }, SECRET, 600),
-    global: {
-      fetch: (input, init) =>
-        handlePostgrest(new Request(input, init), {
-          db: db as unknown as Queryable,
-          verifyToken: (token) => verifyJwt(token, SECRET),
-        }),
-    },
-  });
+const admin = () => serviceClient(db);
 
 beforeAll(async () => {
   db = await createTestDb();

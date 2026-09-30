@@ -57,6 +57,13 @@
       "when": 1790795472422,
       "tag": "20260930191112_media_bucket_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790796184535,
+      "tag": "20260930192304_reminder_recipients",
+      "breakpoints": true
     }
   ]
 }

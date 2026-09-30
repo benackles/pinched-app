@@ -2,7 +2,7 @@
   "name": "pinched-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Pinched — plan the week, shop for the gap, prep once, cook faster.",
+  "description": "Pinched \u2014 plan the week, shop for the gap, prep once, cook faster.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -21,7 +21,8 @@
     "db:generate": "drizzle-kit generate",
     "catalog:build": "tsx scripts/build-catalog.ts",
     "assets:icons": "tsx scripts/generate-icons.ts",
-    "assets:recipe-art": "tsx scripts/generate-recipe-art.ts"
+    "assets:recipe-art": "tsx scripts/generate-recipe-art.ts",
+    "vapid:keys": "tsx scripts/generate-vapid-keys.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.8",
