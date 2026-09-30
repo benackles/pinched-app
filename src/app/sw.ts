@@ -202,7 +202,13 @@ self.addEventListener("message", (event) => {
   const data = event.data as PinchedMessage | undefined;
   if (!data || typeof data !== "object") return;
   if (data.type === "PINCHED_SESSION") {
-    event.waitUntil(syncSession(typeof data.userId === "string" ? data.userId : null));
+    const source = event.source;
+    event.waitUntil(
+      syncSession(typeof data.userId === "string" ? data.userId : null).then(() => {
+        // Tell the page its session is settled, so it can warm the caches without racing a purge.
+        source?.postMessage({ type: "PINCHED_SESSION_SYNCED" });
+      }),
+    );
   } else if (data.type === "PINCHED_CLEAR_CACHES") {
     event.waitUntil(clearUserCaches());
   }

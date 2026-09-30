@@ -2,51 +2,22 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-import { listQueue, onQueueChange, type QueueEntry } from "./queue";
+import type { QueueEntry } from "./queue";
+import { queueSnapshot, subscribeToQueue } from "./queue-store";
 
-/**
- * React bindings for the offline queue. IndexedDB is asynchronous, so a small in-memory mirror
- * is kept per person and refreshed whenever the queue changes (in this tab or another).
- */
+/** React bindings for the offline queue (the store itself is in queue-store.ts). */
 
 const EMPTY: QueueEntry[] = [];
-const mirror = new Map<string, QueueEntry[]>();
-const subscribers = new Set<() => void>();
-let stopListening: (() => void) | null = null;
-
-const same = (a: QueueEntry[], b: QueueEntry[]) =>
-  a.length === b.length &&
-  a.every((entry, i) => entry.id === b[i]!.id && entry.value === b[i]!.value);
-
-async function refresh(userId: string) {
-  const entries = await listQueue(userId);
-  if (same(mirror.get(userId) ?? EMPTY, entries)) return;
-  mirror.set(userId, entries.length ? entries : EMPTY);
-  subscribers.forEach((callback) => callback());
-}
-
-function subscribe(userId: string, callback: () => void) {
-  subscribers.add(callback);
-  stopListening ??= onQueueChange(() => mirror.forEach((_, id) => void refresh(id)));
-  void refresh(userId);
-  return () => {
-    subscribers.delete(callback);
-    if (subscribers.size === 0) {
-      stopListening?.();
-      stopListening = null;
-    }
-  };
-}
 
 /** The person's pending offline changes (stable reference until something changes). */
 export function useQueueEntries(userId: string): QueueEntry[] {
   const subscribeUser = useCallback(
-    (callback: () => void) => subscribe(userId, callback),
+    (callback: () => void) => subscribeToQueue(userId, callback),
     [userId],
   );
   return useSyncExternalStore(
     subscribeUser,
-    () => mirror.get(userId) ?? EMPTY,
+    () => queueSnapshot(userId),
     () => EMPTY,
   );
 }
