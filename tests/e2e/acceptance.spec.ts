@@ -250,6 +250,17 @@ test("the whole week: recipes → kitchen → plan → grocery → prep → cook
       .click();
     await page.getByRole("tab", { name: /^History/ }).click();
     await expect(page.getByText("Great with extra yogurt sauce.")).toBeVisible();
+
+    // A recipe that is on the plan says so, and goes straight into cook mode from there.
+    await page.goto("/recipes");
+    await page
+      .getByRole("link", { name: new RegExp(RECIPES.sheetPan) })
+      .first()
+      .click();
+    await expect(page.getByText(/On your plan:.*Thursday dinner/)).toBeVisible();
+    await page.getByRole("link", { name: "Cook it" }).click();
+    await page.waitForURL(/\/cook\//);
+    await expect(page.getByRole("heading", { level: 1, name: RECIPES.sheetPan })).toBeVisible();
   });
 
   // The whole flow ran without an uncaught error or a console error.

@@ -196,6 +196,10 @@ export default async function RecipePage({ params }: { params: Promise<{ id: str
                 {detail.planned.map((m) => `${dayName(m.planned_date)} ${m.meal_type}`).join(", ")}
               </p>
               <p className="mt-0.5">
+                <Link href={`/cook/${detail.planned[0]!.id}`} className="font-semibold underline">
+                  Cook it
+                </Link>
+                {" · "}
                 <Link href="/plan" className="underline">
                   Open the plan
                 </Link>
