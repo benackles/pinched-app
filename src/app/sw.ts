@@ -124,14 +124,19 @@ const runtimeCaching: RuntimeCaching[] = [
   {
     matcher: ({ request, url }) =>
       request.method === "GET" &&
-      (url.pathname.includes("/storage/v1/object/") || url.pathname.startsWith("/api/local/storage/")) &&
+      (url.pathname.includes("/storage/v1/object/") ||
+        url.pathname.startsWith("/api/local/storage/")) &&
       request.destination !== "document",
     method: "GET",
     handler: new CacheFirst({
       cacheName: CACHE.media,
       plugins: [
         new CacheableResponsePlugin({ statuses: [0, 200] }),
-        new ExpirationPlugin({ maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 30, purgeOnQuotaError: true }),
+        new ExpirationPlugin({
+          maxEntries: 120,
+          maxAgeSeconds: 60 * 60 * 24 * 30,
+          purgeOnQuotaError: true,
+        }),
         {
           cacheKeyWillBeUsed: async ({ request }) => {
             const url = new URL(request.url);
@@ -185,8 +190,7 @@ async function syncSession(userId: string | null) {
 }
 
 type PinchedMessage =
-  | { type: "PINCHED_SESSION"; userId: string | null }
-  | { type: "PINCHED_CLEAR_CACHES" };
+  { type: "PINCHED_SESSION"; userId: string | null } | { type: "PINCHED_CLEAR_CACHES" };
 
 self.addEventListener("message", (event) => {
   const data = event.data as PinchedMessage | undefined;
@@ -222,7 +226,10 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = new URL((event.notification.data as { url?: string } | undefined)?.url ?? "/plan", self.location.origin).href;
+  const target = new URL(
+    (event.notification.data as { url?: string } | undefined)?.url ?? "/plan",
+    self.location.origin,
+  ).href;
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });

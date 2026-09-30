@@ -1,0 +1,5 @@
+ALTER TABLE "prep_plans" ADD COLUMN "is_manually_ordered" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER POLICY "ingredients: select catalog or own" ON "ingredients" TO authenticated USING (owner_id = (select auth.jwt() ->> 'sub') or (owner_id is null and exists (select 1 from recipes r where r.id = ingredients.recipe_id)));--> statement-breakpoint
+ALTER POLICY "recipe_steps: select catalog or own" ON "recipe_steps" TO authenticated USING (owner_id = (select auth.jwt() ->> 'sub') or (owner_id is null and exists (select 1 from recipes r where r.id = recipe_steps.recipe_id)));--> statement-breakpoint
+ALTER POLICY "recipes: select catalog or own" ON "recipes" TO authenticated USING ((source = 'seeded' and published_at is not null) or owner_id = (select auth.jwt() ->> 'sub') or (source = 'seeded' and public.has_saved_recipe(recipes.id)));--> statement-breakpoint
+ALTER POLICY "saved_recipes: insert own" ON "saved_recipes" TO authenticated WITH CHECK (user_id = (select auth.jwt() ->> 'sub') and exists (select 1 from recipes r where r.id = saved_recipes.recipe_id));

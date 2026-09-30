@@ -6,7 +6,10 @@ import { randomUUID } from "node:crypto";
 /** Revision for precache entries that are not content-hashed by the build (e.g. /~offline). */
 const revision = (() => {
   try {
-    return execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execSync("git rev-parse HEAD", {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
   } catch {
     return randomUUID();
   }

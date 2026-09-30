@@ -48,10 +48,12 @@ export async function seedTwoTenants(db: Db): Promise<void> {
 
       insert into ingredients (recipe_id, owner_id, sort_order, name, normalized_name, raw_text, grocery_section) values
         ('${ids.seededPublished}', null, 0, 'yellow onion', 'onion', '1 yellow onion', 'Produce'),
+        ('${ids.seededDraft}', null, 0, 'secret spice', 'secret spice', '1 tsp secret spice', 'Pantry'),
         ('${ids.aliceRecipe}', '${ALICE}', 0, 'rice', 'rice', '1 cup rice', 'Pantry'),
         ('${ids.bobRecipe}', '${BOB}', 0, 'beans', 'bean', '1 can beans', 'Pantry');
       insert into recipe_steps (recipe_id, owner_id, step_number, instruction) values
         ('${ids.seededPublished}', null, 1, 'Dice the onion.'),
+        ('${ids.seededDraft}', null, 1, 'Draft step.'),
         ('${ids.aliceRecipe}', '${ALICE}', 1, 'Cook the rice.'),
         ('${ids.bobRecipe}', '${BOB}', 1, 'Heat the beans.');
 

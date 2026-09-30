@@ -57,7 +57,8 @@ const sub = sql.raw("(select auth.jwt() ->> 'sub')");
 /** Column default: stamped from the JWT so the client never supplies (or spoofs) a user id. */
 const subDefault = sql.raw("(auth.jwt() ->> 'sub')");
 
-const list = (values: readonly string[]) => sql.raw(values.map((v) => `'${v.replace(/'/g, "''")}'`).join(", "));
+const list = (values: readonly string[]) =>
+  sql.raw(values.map((v) => `'${v.replace(/'/g, "''")}'`).join(", "));
 
 const id = () => uuid().primaryKey().defaultRandom();
 const userId = () => text().notNull().default(subDefault);
@@ -67,15 +68,27 @@ const updatedAt = () => tstz().notNull().defaultNow();
 
 /** select / insert / update / delete own rows — the standard policy set for user tables. */
 const ownRows = (table: string) => [
-  pgPolicy(`${table}: select own`, { for: "select", to: authenticated, using: sql`user_id = ${sub}` }),
-  pgPolicy(`${table}: insert own`, { for: "insert", to: authenticated, withCheck: sql`user_id = ${sub}` }),
+  pgPolicy(`${table}: select own`, {
+    for: "select",
+    to: authenticated,
+    using: sql`user_id = ${sub}`,
+  }),
+  pgPolicy(`${table}: insert own`, {
+    for: "insert",
+    to: authenticated,
+    withCheck: sql`user_id = ${sub}`,
+  }),
   pgPolicy(`${table}: update own`, {
     for: "update",
     to: authenticated,
     using: sql`user_id = ${sub}`,
     withCheck: sql`user_id = ${sub}`,
   }),
-  pgPolicy(`${table}: delete own`, { for: "delete", to: authenticated, using: sql`user_id = ${sub}` }),
+  pgPolicy(`${table}: delete own`, {
+    for: "delete",
+    to: authenticated,
+    using: sql`user_id = ${sub}`,
+  }),
 ];
 
 // ───────────────────────────────────────── accounts ─────────────────────────────────────────
@@ -103,8 +116,16 @@ export const profiles = pgTable(
   (t) => [
     check("profiles_prep_day_check", sql`${t.prep_day} between 1 and 7`),
     // Users read and edit their own profile; nobody deletes it from the client.
-    pgPolicy("profiles: select own", { for: "select", to: authenticated, using: sql`user_id = ${sub}` }),
-    pgPolicy("profiles: insert own", { for: "insert", to: authenticated, withCheck: sql`user_id = ${sub}` }),
+    pgPolicy("profiles: select own", {
+      for: "select",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
+    pgPolicy("profiles: insert own", {
+      for: "insert",
+      to: authenticated,
+      withCheck: sql`user_id = ${sub}`,
+    }),
     pgPolicy("profiles: update own", {
       for: "update",
       to: authenticated,
@@ -131,7 +152,11 @@ export const subscriptions = pgTable(
     updated_at: updatedAt(),
   },
   () => [
-    pgPolicy("subscriptions: select own", { for: "select", to: authenticated, using: sql`user_id = ${sub}` }),
+    pgPolicy("subscriptions: select own", {
+      for: "select",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
   ],
 );
 
@@ -146,7 +171,11 @@ export const usage_counters = pgTable(
   },
   (t) => [
     primaryKey({ name: "usage_counters_pkey", columns: [t.user_id, t.key] }),
-    pgPolicy("usage_counters: select own", { for: "select", to: authenticated, using: sql`user_id = ${sub}` }),
+    pgPolicy("usage_counters: select own", {
+      for: "select",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
   ],
 );
 
@@ -177,7 +206,10 @@ export const recipes = pgTable(
     servings: integer(),
     /** Original yield wording, e.g. "Makes 12 muffins". */
     servings_label: text(),
-    tags: text().array().notNull().default(sql`'{}'::text[]`),
+    tags: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     owner_id: text().default(subDefault),
     published_at: tstz(),
     created_at: createdAt(),
@@ -191,15 +223,20 @@ export const recipes = pgTable(
       sql`(${t.source} = 'seeded' and ${t.owner_id} is null) or (${t.source} <> 'seeded' and ${t.owner_id} is not null)`,
     ),
     check("recipes_servings_check", sql`${t.servings} is null or ${t.servings} between 1 and 999`),
-    uniqueIndex("recipes_seeded_slug_key").on(t.slug).where(sql`${t.source} = 'seeded'`),
+    uniqueIndex("recipes_seeded_slug_key")
+      .on(t.slug)
+      .where(sql`${t.source} = 'seeded'`),
     uniqueIndex("recipes_import_url_key")
       .on(t.owner_id, t.source_url)
       .where(sql`${t.source} = 'url_import'`),
     index("recipes_owner_idx").on(t.owner_id),
+    // Published catalog recipes, your own, and any catalog recipe you saved — even after it is
+    // retired, so a planned meal never loses its ingredients. has_saved_recipe() is a SECURITY
+    // DEFINER lookup: reading saved_recipes inline would make the two tables' policies recurse.
     pgPolicy("recipes: select catalog or own", {
       for: "select",
       to: authenticated,
-      using: sql`(source = 'seeded' and published_at is not null) or owner_id = ${sub}`,
+      using: sql`(source = 'seeded' and published_at is not null) or owner_id = ${sub} or (source = 'seeded' and public.has_saved_recipe(recipes.id))`,
     }),
     pgPolicy("recipes: insert own", {
       for: "insert",
@@ -243,7 +280,11 @@ export const ingredients = pgTable(
     group_label: text(),
   },
   (t) => [
-    foreignKey({ name: "ingredients_recipe_fk", columns: [t.recipe_id], foreignColumns: [recipes.id] }).onDelete("cascade"),
+    foreignKey({
+      name: "ingredients_recipe_fk",
+      columns: [t.recipe_id],
+      foreignColumns: [recipes.id],
+    }).onDelete("cascade"),
     foreignKey({
       name: "ingredients_recipe_owner_fk",
       columns: [t.recipe_id, t.owner_id],
@@ -251,19 +292,28 @@ export const ingredients = pgTable(
     }).onDelete("cascade"),
     check("ingredients_section_check", sql`${t.grocery_section} in (${list(GROCERY_SECTIONS)})`),
     index("ingredients_recipe_idx").on(t.recipe_id),
+    // Catalog ingredients follow their recipe: visible only while the recipe itself is visible to you.
     pgPolicy("ingredients: select catalog or own", {
       for: "select",
       to: authenticated,
-      using: sql`owner_id is null or owner_id = ${sub}`,
+      using: sql`owner_id = ${sub} or (owner_id is null and exists (select 1 from recipes r where r.id = ingredients.recipe_id))`,
     }),
-    pgPolicy("ingredients: insert own", { for: "insert", to: authenticated, withCheck: sql`owner_id = ${sub}` }),
+    pgPolicy("ingredients: insert own", {
+      for: "insert",
+      to: authenticated,
+      withCheck: sql`owner_id = ${sub}`,
+    }),
     pgPolicy("ingredients: update own", {
       for: "update",
       to: authenticated,
       using: sql`owner_id = ${sub}`,
       withCheck: sql`owner_id = ${sub}`,
     }),
-    pgPolicy("ingredients: delete own", { for: "delete", to: authenticated, using: sql`owner_id = ${sub}` }),
+    pgPolicy("ingredients: delete own", {
+      for: "delete",
+      to: authenticated,
+      using: sql`owner_id = ${sub}`,
+    }),
   ],
 );
 
@@ -277,27 +327,41 @@ export const recipe_steps = pgTable(
     instruction: text().notNull(),
   },
   (t) => [
-    foreignKey({ name: "recipe_steps_recipe_fk", columns: [t.recipe_id], foreignColumns: [recipes.id] }).onDelete("cascade"),
+    foreignKey({
+      name: "recipe_steps_recipe_fk",
+      columns: [t.recipe_id],
+      foreignColumns: [recipes.id],
+    }).onDelete("cascade"),
     foreignKey({
       name: "recipe_steps_recipe_owner_fk",
       columns: [t.recipe_id, t.owner_id],
       foreignColumns: [recipes.id, recipes.owner_id],
     }).onDelete("cascade"),
-    unique("recipe_steps_recipe_step_key").on(t.recipe_id, t.owner_id, t.step_number).nullsNotDistinct(),
+    unique("recipe_steps_recipe_step_key")
+      .on(t.recipe_id, t.owner_id, t.step_number)
+      .nullsNotDistinct(),
     index("recipe_steps_recipe_idx").on(t.recipe_id),
     pgPolicy("recipe_steps: select catalog or own", {
       for: "select",
       to: authenticated,
-      using: sql`owner_id is null or owner_id = ${sub}`,
+      using: sql`owner_id = ${sub} or (owner_id is null and exists (select 1 from recipes r where r.id = recipe_steps.recipe_id))`,
     }),
-    pgPolicy("recipe_steps: insert own", { for: "insert", to: authenticated, withCheck: sql`owner_id = ${sub}` }),
+    pgPolicy("recipe_steps: insert own", {
+      for: "insert",
+      to: authenticated,
+      withCheck: sql`owner_id = ${sub}`,
+    }),
     pgPolicy("recipe_steps: update own", {
       for: "update",
       to: authenticated,
       using: sql`owner_id = ${sub}`,
       withCheck: sql`owner_id = ${sub}`,
     }),
-    pgPolicy("recipe_steps: delete own", { for: "delete", to: authenticated, using: sql`owner_id = ${sub}` }),
+    pgPolicy("recipe_steps: delete own", {
+      for: "delete",
+      to: authenticated,
+      using: sql`owner_id = ${sub}`,
+    }),
   ],
 );
 
@@ -313,12 +377,42 @@ export const saved_recipes = pgTable(
     saved_at: createdAt(),
   },
   (t) => [
-    foreignKey({ name: "saved_recipes_recipe_fk", columns: [t.recipe_id], foreignColumns: [recipes.id] }).onDelete("cascade"),
+    foreignKey({
+      name: "saved_recipes_recipe_fk",
+      columns: [t.recipe_id],
+      foreignColumns: [recipes.id],
+    }).onDelete("cascade"),
     unique("saved_recipes_user_recipe_key").on(t.user_id, t.recipe_id),
     unique("saved_recipes_id_user_key").on(t.id, t.user_id),
-    check("saved_recipes_rating_check", sql`${t.personal_rating} is null or ${t.personal_rating} between 1 and 5`),
+    check(
+      "saved_recipes_rating_check",
+      sql`${t.personal_rating} is null or ${t.personal_rating} between 1 and 5`,
+    ),
     index("saved_recipes_user_idx").on(t.user_id),
-    ...ownRows("saved_recipes"),
+    pgPolicy("saved_recipes: select own", {
+      for: "select",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
+    // You can only save a recipe you can already see (published catalog, or your own), so a saved
+    // row can never be used to reach someone else's private recipe. recipe_id is immutable to
+    // clients (column privileges), so a saved row can't be re-pointed afterwards either.
+    pgPolicy("saved_recipes: insert own", {
+      for: "insert",
+      to: authenticated,
+      withCheck: sql`user_id = ${sub} and exists (select 1 from recipes r where r.id = saved_recipes.recipe_id)`,
+    }),
+    pgPolicy("saved_recipes: update own", {
+      for: "update",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+      withCheck: sql`user_id = ${sub}`,
+    }),
+    pgPolicy("saved_recipes: delete own", {
+      for: "delete",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
   ],
 );
 
@@ -379,7 +473,11 @@ export const recipe_media = pgTable(
     created_at: createdAt(),
   },
   (t) => [
-    foreignKey({ name: "recipe_media_recipe_fk", columns: [t.recipe_id], foreignColumns: [recipes.id] }).onDelete("cascade"),
+    foreignKey({
+      name: "recipe_media_recipe_fk",
+      columns: [t.recipe_id],
+      foreignColumns: [recipes.id],
+    }).onDelete("cascade"),
     check("recipe_media_kind_check", sql`${t.kind} in (${list(MEDIA_KINDS)})`),
     // Objects live in a per-user folder: <user id>/<recipe id>/<file>.
     check("recipe_media_path_check", sql`starts_with(${t.storage_path}, ${t.user_id} || '/')`),
@@ -602,7 +700,11 @@ export const grocery_item_sources = pgTable(
       columns: [t.planned_meal_id, t.user_id],
       foreignColumns: [planned_meals.id, planned_meals.user_id],
     }).onDelete("cascade"),
-    foreignKey({ name: "grocery_sources_ingredient_fk", columns: [t.ingredient_id], foreignColumns: [ingredients.id] }).onDelete("set null"),
+    foreignKey({
+      name: "grocery_sources_ingredient_fk",
+      columns: [t.ingredient_id],
+      foreignColumns: [ingredients.id],
+    }).onDelete("set null"),
     index("grocery_sources_item_idx").on(t.grocery_list_item_id),
     index("grocery_sources_user_idx").on(t.user_id),
     ...ownRows("grocery_item_sources"),
@@ -619,6 +721,8 @@ export const prep_plans = pgTable(
     weekly_plan_id: uuid().notNull(),
     prep_date: date({ mode: "string" }),
     estimated_minutes: integer().notNull().default(0),
+    /** The cook dragged tasks into their own order — regeneration keeps it instead of re-sorting. */
+    is_manually_ordered: boolean().notNull().default(false),
     generated_at: createdAt(),
   },
   (t) => [
@@ -716,8 +820,16 @@ export const prep_edit_log = pgTable(
       sql`${t.action} in ('add', 'edit', 'delete', 'reorder', 'complete', 'uncomplete', 'change_day')`,
     ),
     index("prep_edit_log_user_idx").on(t.user_id, t.created_at),
-    pgPolicy("prep_edit_log: select own", { for: "select", to: authenticated, using: sql`user_id = ${sub}` }),
-    pgPolicy("prep_edit_log: insert own", { for: "insert", to: authenticated, withCheck: sql`user_id = ${sub}` }),
+    pgPolicy("prep_edit_log: select own", {
+      for: "select",
+      to: authenticated,
+      using: sql`user_id = ${sub}`,
+    }),
+    pgPolicy("prep_edit_log: insert own", {
+      for: "insert",
+      to: authenticated,
+      withCheck: sql`user_id = ${sub}`,
+    }),
   ],
 );
 
@@ -740,7 +852,11 @@ export const cooking_events = pgTable(
       columns: [t.saved_recipe_id, t.user_id],
       foreignColumns: [saved_recipes.id, saved_recipes.user_id],
     }).onDelete("cascade"),
-    foreignKey({ name: "cooking_events_meal_fk", columns: [t.planned_meal_id], foreignColumns: [planned_meals.id] }).onDelete("set null"),
+    foreignKey({
+      name: "cooking_events_meal_fk",
+      columns: [t.planned_meal_id],
+      foreignColumns: [planned_meals.id],
+    }).onDelete("set null"),
     check("cooking_events_rating_check", sql`${t.rating} is null or ${t.rating} between 1 and 5`),
     index("cooking_events_saved_idx").on(t.saved_recipe_id, t.cooked_at),
     index("cooking_events_user_idx").on(t.user_id),

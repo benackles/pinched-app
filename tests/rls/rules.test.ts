@@ -173,6 +173,130 @@ describe("recipes", () => {
   });
 });
 
+describe("catalog visibility and saving", () => {
+  const CAROL = "user_carol";
+  const rowsFor = (user: string, recipeId: string) =>
+    asUser(db, user, async (tx) => ({
+      recipes: (await tx.query("select id from recipes where id = $1", [recipeId])).rows.length,
+      ingredients: (await tx.query("select id from ingredients where recipe_id = $1", [recipeId]))
+        .rows.length,
+      steps: (await tx.query("select id from recipe_steps where recipe_id = $1", [recipeId])).rows
+        .length,
+    }));
+
+  it("hides the ingredients and steps of unpublished catalog recipes along with the recipe", async () => {
+    expect(await rowsFor(ALICE, ids.seededDraft)).toEqual({ recipes: 0, ingredients: 0, steps: 0 });
+    expect(await rowsFor(ALICE, ids.seededPublished)).toEqual({
+      recipes: 1,
+      ingredients: 1,
+      steps: 1,
+    });
+  });
+
+  it("keeps other people's private recipes, ingredients and steps invisible", async () => {
+    expect(await rowsFor(ALICE, ids.bobRecipe)).toEqual({ recipes: 0, ingredients: 0, steps: 0 });
+    expect(await rowsFor(ALICE, ids.aliceRecipe)).toEqual({ recipes: 1, ingredients: 1, steps: 1 });
+  });
+
+  it("lets you save only a recipe you can already see", async () => {
+    const save = (recipeId: string) =>
+      pgError(() =>
+        asUser(db, CAROL, (tx) =>
+          tx.query("insert into saved_recipes (recipe_id) values ($1)", [recipeId]),
+        ),
+      );
+    expect(await save(ids.seededDraft)).toMatchObject({ code: "42501" });
+    expect(await save(ids.bobRecipe)).toMatchObject({ code: "42501" });
+    expect(await save(id(999))).toMatchObject({ code: "42501" });
+    expect(await save(ids.seededPublished)).toBeNull();
+    // …and saving never unlocks the draft or Bob's recipe.
+    expect(await rowsFor(CAROL, ids.seededDraft)).toEqual({ recipes: 0, ingredients: 0, steps: 0 });
+    expect(await rowsFor(CAROL, ids.bobRecipe)).toEqual({ recipes: 0, ingredients: 0, steps: 0 });
+  });
+
+  it("does not let a saved row be re-pointed or re-assigned", async () => {
+    for (const change of [
+      `recipe_id = '${ids.bobRecipe}'`,
+      `recipe_id = '${ids.seededDraft}'`,
+      `user_id = '${BOB}'`,
+    ]) {
+      const error = await pgError(() =>
+        asUser(db, ALICE, (tx) =>
+          tx.query(`update saved_recipes set ${change} where id = '${ids.aliceSaved}'`),
+        ),
+      );
+      expect(error?.code, change).toBe("42501");
+    }
+    const ok = await pgError(() =>
+      asUser(db, ALICE, (tx) =>
+        tx.query(
+          `update saved_recipes set favorite = true, personal_rating = 4 where id = '${ids.aliceSaved}'`,
+        ),
+      ),
+    );
+    expect(ok).toBeNull();
+  });
+
+  it("keeps a retired catalog recipe readable for the people who saved it — and nobody else", async () => {
+    await asService(db, (tx) =>
+      tx.exec(`update recipes set published_at = null where id = '${ids.seededPublished}'`),
+    );
+    try {
+      expect(await rowsFor(ALICE, ids.seededPublished)).toEqual({
+        recipes: 1,
+        ingredients: 1,
+        steps: 1,
+      });
+      expect(await rowsFor(BOB, ids.seededPublished)).toEqual({
+        recipes: 1,
+        ingredients: 1,
+        steps: 1,
+      });
+      expect(await rowsFor("user_dave", ids.seededPublished)).toEqual({
+        recipes: 0,
+        ingredients: 0,
+        steps: 0,
+      });
+    } finally {
+      await asService(db, (tx) =>
+        tx.exec(`update recipes set published_at = now() where id = '${ids.seededPublished}'`),
+      );
+    }
+  });
+
+  it("does not let has_saved_recipe() answer for anyone else", async () => {
+    const asCarol = await asUser(
+      db,
+      CAROL,
+      async (tx) =>
+        (
+          await tx.query<{ r: boolean }>(
+            `select public.has_saved_recipe('${ids.seededPublished}') as r`,
+          )
+        ).rows[0]!.r,
+    );
+    const asDave = await asUser(
+      db,
+      "user_dave",
+      async (tx) =>
+        (
+          await tx.query<{ r: boolean }>(
+            `select public.has_saved_recipe('${ids.seededPublished}') as r`,
+          )
+        ).rows[0]!.r,
+    );
+    expect(asCarol).toBe(true); // saved in the earlier test
+    expect(asDave).toBe(false);
+    expect(
+      (
+        await pgError(() =>
+          asAnon(db, (tx) => tx.query(`select public.has_saved_recipe('${ids.seededPublished}')`)),
+        )
+      )?.code,
+    ).toBe("42501");
+  });
+});
+
 describe("profiles", () => {
   it("lets a user change their own preferences", async () => {
     const { rows } = await asUser(db, ALICE, (tx) =>

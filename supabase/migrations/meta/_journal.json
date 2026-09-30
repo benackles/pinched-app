@@ -22,6 +22,20 @@
       "when": 1790788774263,
       "tag": "20260930171934_storage_media",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790790833233,
+      "tag": "20260930175353_saved_recipe_access",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790790841316,
+      "tag": "20260930175401_catalog_visibility",
+      "breakpoints": true
     }
   ]
 }

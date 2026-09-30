@@ -16,7 +16,8 @@ function Toaster(props: ToasterProps) {
           description: "!text-muted-foreground",
           actionButton:
             "!h-9 !rounded-full !bg-primary-strong !px-4 !text-sm !font-semibold !text-primary-foreground",
-          cancelButton: "!h-9 !rounded-full !bg-secondary !px-4 !text-sm !text-secondary-foreground",
+          cancelButton:
+            "!h-9 !rounded-full !bg-secondary !px-4 !text-sm !text-secondary-foreground",
         },
       }}
       {...props}

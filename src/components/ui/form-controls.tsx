@@ -29,11 +29,7 @@ function PillInput({ className, ...props }: React.ComponentProps<"input">) {
 
 function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
   return (
-    <textarea
-      data-slot="textarea"
-      className={cn(field, "min-h-24 py-3", className)}
-      {...props}
-    />
+    <textarea data-slot="textarea" className={cn(field, "min-h-24 py-3", className)} {...props} />
   );
 }
 

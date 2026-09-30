@@ -1,0 +1,347 @@
+[
+  {
+    "slug": "chicken-rice-bowls",
+    "title": "Chicken Rice Bowls",
+    "headnote": "Soy-garlic chicken over rice with roasted sweet potatoes and a cool, lemony yogurt sauce. Most of it can be made on prep day.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 30,
+    "tags": ["dinner", "high-protein", "make-ahead"],
+    "ingredients": [
+      "1½ lb boneless skinless chicken thighs",
+      "1½ cups jasmine rice",
+      "1 yellow onion, sliced",
+      "3 cloves garlic, minced",
+      "2 medium sweet potatoes, cubed",
+      "2 tbsp soy sauce",
+      "1 cup plain Greek yogurt",
+      "1 lemon, juiced",
+      "2 tbsp olive oil"
+    ],
+    "steps": [
+      "Cook the rice according to the package directions.",
+      "Toss the sweet potatoes with half the olive oil and a pinch of salt. Roast at 425°F for 25 minutes.",
+      "Season the chicken with the soy sauce and garlic. Sear in the remaining oil with the onion until cooked through, about 12 minutes.",
+      "Stir the yogurt and lemon juice together into a sauce.",
+      "Divide the rice, chicken and sweet potatoes among bowls and drizzle with the sauce."
+    ]
+  },
+  {
+    "slug": "turkey-patties",
+    "title": "Turkey Patties with Yogurt Sauce",
+    "headnote": "Herby turkey patties with a cool cucumber-dill sauce. The sauce and the chopping can be done ahead.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["dinner", "high-protein"],
+    "ingredients": [
+      "1 lb ground turkey",
+      "1 yellow onion, finely diced",
+      "2 cloves garlic, minced",
+      "1 large egg",
+      "½ cup panko breadcrumbs",
+      "1 cup plain Greek yogurt",
+      "1 cucumber, grated",
+      "1 lemon, juiced",
+      "1 small bunch fresh dill, chopped",
+      "1 tbsp olive oil",
+      "½ tsp kosher salt"
+    ],
+    "steps": [
+      "Mix the turkey, onion, garlic, egg, panko and salt and form into 8 patties.",
+      "Stir the yogurt, cucumber, lemon juice and dill together into a sauce.",
+      "Cook the patties in the oiled skillet over medium-high heat, 5 minutes per side, until cooked through.",
+      "Serve warm with plenty of sauce."
+    ]
+  },
+  {
+    "slug": "tomato-pasta",
+    "title": "Simple Tomato Pasta",
+    "headnote": "A weeknight spaghetti with soft, garlicky tomatoes and plenty of basil. Nothing fancy, always welcome.",
+    "servings": 4,
+    "prep_minutes": 10,
+    "cook_minutes": 25,
+    "tags": ["dinner", "vegetarian"],
+    "ingredients": [
+      "1 lb spaghetti",
+      "1 (28-oz) can whole peeled tomatoes",
+      "1 yellow onion, diced",
+      "4 cloves garlic, sliced",
+      "¼ cup extra-virgin olive oil",
+      "1 bunch fresh basil",
+      "½ cup grated Parmesan",
+      "1 tsp kosher salt"
+    ],
+    "steps": [
+      "Bring a large pot of salted water to a boil.",
+      "Warm the olive oil in a large skillet over medium heat. Cook the onion and garlic until soft, about 6 minutes.",
+      "Add the tomatoes, crushing them with a spoon, and simmer for 15 minutes.",
+      "Cook the spaghetti until al dente. Toss with the tomatoes, basil and Parmesan."
+    ]
+  },
+  {
+    "slug": "miso-glazed-cod",
+    "title": "Miso-Glazed Cod",
+    "headnote": "Broiled cod with a sweet-salty miso glaze, served with rice and bok choy. Dinner in about twenty-five minutes.",
+    "servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 15,
+    "tags": ["dinner", "pescatarian", "dairy-free", "quick"],
+    "ingredients": [
+      "2 (6-oz) cod fillets",
+      "3 tbsp white miso",
+      "1 tbsp honey",
+      "1 tbsp soy sauce",
+      "1 cup jasmine rice",
+      "1 bunch scallions, sliced",
+      "2 heads baby bok choy, halved",
+      "1 tbsp neutral oil"
+    ],
+    "steps": [
+      "Whisk the miso, honey and soy sauce into a glaze.",
+      "Cook the rice according to the package directions.",
+      "Heat the broiler. Brush the cod with the glaze and broil 8 to 10 minutes, until flaky.",
+      "Sauté the bok choy in the oil for 3 minutes.",
+      "Serve the cod with the rice and bok choy and top with the scallions."
+    ]
+  },
+  {
+    "slug": "sheet-pan-chicken-sweet-potatoes",
+    "title": "Sheet-Pan Chicken & Sweet Potatoes",
+    "headnote": "Garlic-lemon chicken thighs roasted on one pan with sweet potatoes, red onion and broccoli. Minimal dishes.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 35,
+    "tags": ["dinner", "gluten-free", "dairy-free", "one-pan"],
+    "ingredients": [
+      "2 lb bone-in chicken thighs",
+      "2 medium sweet potatoes, cubed",
+      "1 red onion, sliced",
+      "1 head broccoli, cut into florets",
+      "3 tbsp olive oil",
+      "4 cloves garlic, minced",
+      "1 lemon, sliced",
+      "1 tsp kosher salt"
+    ],
+    "steps": [
+      "Heat the oven to 425°F.",
+      "Toss the chicken, sweet potatoes, onion and broccoli with the oil, garlic and salt on a large sheet pan.",
+      "Tuck in the lemon slices and roast for 35 minutes, until the chicken is crisp and the vegetables are tender."
+    ]
+  },
+  {
+    "slug": "black-bean-patties",
+    "title": "Black Bean Patties",
+    "headnote": "Crispy cumin-spiced black bean patties on buns with a cilantro yogurt sauce.",
+    "servings": 4,
+    "prep_minutes": 20,
+    "cook_minutes": 15,
+    "tags": ["dinner", "vegetarian"],
+    "ingredients": [
+      "2 (15-oz) cans black beans, drained and rinsed",
+      "½ yellow onion, finely diced",
+      "2 cloves garlic, minced",
+      "1 large egg",
+      "½ cup panko breadcrumbs",
+      "1 tsp ground cumin",
+      "1 small bunch fresh cilantro, chopped",
+      "½ cup plain Greek yogurt",
+      "4 burger buns",
+      "1 tbsp olive oil"
+    ],
+    "steps": [
+      "Mash the black beans in a large bowl. Mix in the onion, garlic, egg, panko, cumin and half the cilantro.",
+      "Form into 4 patties and chill for 10 minutes.",
+      "Pan-fry the patties in the oil, 4 minutes per side.",
+      "Stir the yogurt and the remaining cilantro together into a sauce.",
+      "Serve the patties on buns with the sauce."
+    ]
+  },
+  {
+    "slug": "salmon-bowls",
+    "title": "Salmon Bowls",
+    "headnote": "Seared salmon over rice with cucumber, avocado and a soy-sesame dressing. The dressing keeps for days.",
+    "servings": 2,
+    "prep_minutes": 10,
+    "cook_minutes": 20,
+    "tags": ["dinner", "pescatarian", "dairy-free", "quick"],
+    "ingredients": [
+      "2 (6-oz) salmon fillets",
+      "1 cup jasmine rice",
+      "1 cucumber, sliced",
+      "1 avocado, sliced",
+      "2 tbsp soy sauce",
+      "1 tbsp rice vinegar",
+      "1 bunch scallions, sliced",
+      "1 tbsp sesame seeds",
+      "1 tbsp neutral oil"
+    ],
+    "steps": [
+      "Cook the rice according to the package directions.",
+      "Whisk the soy sauce and rice vinegar into a dressing.",
+      "Sear the salmon skin-side down in the oil for 5 minutes, flip and cook 2 minutes more.",
+      "Build bowls with the rice, salmon, cucumber and avocado. Drizzle with the dressing and top with the scallions and sesame seeds."
+    ]
+  },
+  {
+    "slug": "chicken-fried-rice",
+    "title": "Chicken Fried Rice",
+    "headnote": "The best use for leftover rice. Cook the rice a day ahead and dinner takes ten minutes.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["dinner", "dairy-free", "high-protein", "quick"],
+    "ingredients": [
+      "1 cup jasmine rice",
+      "1 lb boneless skinless chicken breast, diced",
+      "3 large eggs, beaten",
+      "2 cups frozen peas and carrots",
+      "4 scallions, sliced",
+      "3 cloves garlic, minced",
+      "1 tbsp fresh ginger, minced",
+      "3 tbsp soy sauce",
+      "1 tbsp sesame oil",
+      "2 tbsp neutral oil"
+    ],
+    "steps": [
+      "Cook the rice the day before and chill it, or use leftover rice.",
+      "Heat 1 tablespoon of the neutral oil in a large skillet over high heat. Cook the chicken until browned and cooked through, about 6 minutes, then transfer to a plate.",
+      "Add the remaining oil, then the garlic, ginger and scallions and stir for 30 seconds. Add the peas and carrots and cook 2 minutes.",
+      "Push everything aside and scramble the eggs in the pan. Add the rice, chicken, soy sauce and sesame oil and stir-fry for 3 minutes."
+    ]
+  },
+  {
+    "slug": "weeknight-chicken-curry",
+    "title": "Weeknight Chicken Curry",
+    "headnote": "A mild, creamy curry built from pantry staples. Serve over rice with plenty of cilantro.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 30,
+    "tags": ["dinner", "gluten-free", "dairy-free"],
+    "ingredients": [
+      "1½ lb boneless skinless chicken thighs, cut into 1-inch pieces",
+      "1 yellow onion, diced",
+      "4 cloves garlic, minced",
+      "1 tbsp fresh ginger, grated",
+      "2 tbsp curry powder",
+      "1 (14-oz) can diced tomatoes",
+      "1 (14-oz) can coconut milk",
+      "2 tbsp neutral oil",
+      "1 tsp kosher salt",
+      "1 bunch fresh cilantro, chopped",
+      "1 cup basmati rice"
+    ],
+    "steps": [
+      "Cook the rice according to the package directions.",
+      "Warm the oil in a large pot over medium heat. Cook the onion until soft, about 6 minutes, then stir in the garlic, ginger and curry powder for 1 minute.",
+      "Add the chicken, tomatoes, coconut milk and salt. Simmer for 20 minutes, until the chicken is cooked through and the sauce has thickened.",
+      "Serve over the rice, topped with the cilantro."
+    ]
+  },
+  {
+    "slug": "sweet-potato-black-bean-tacos",
+    "title": "Sweet Potato & Black Bean Tacos",
+    "headnote": "Roasted sweet potatoes and warm black beans in corn tortillas, finished with lime and cilantro.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 30,
+    "tags": ["dinner", "vegan", "gluten-free", "dairy-free"],
+    "ingredients": [
+      "2 medium sweet potatoes, cubed",
+      "1 tbsp olive oil",
+      "1 tsp chili powder",
+      "½ tsp ground cumin",
+      "½ tsp kosher salt",
+      "1 (15-oz) can black beans, drained and rinsed",
+      "8 small corn tortillas",
+      "¼ red onion, thinly sliced",
+      "1 small bunch fresh cilantro, chopped",
+      "2 limes, cut into wedges",
+      "1 avocado"
+    ],
+    "steps": [
+      "Toss the sweet potatoes with the oil, chili powder, cumin and salt. Roast at 425°F for 25 minutes, until tender and browned.",
+      "Warm the beans in a small saucepan over low heat.",
+      "Warm the tortillas in a dry skillet.",
+      "Fill the tortillas with the sweet potatoes and beans and top with the red onion, cilantro, sliced avocado and a squeeze of lime."
+    ]
+  },
+  {
+    "slug": "sheet-pan-sausage-vegetables",
+    "title": "Sheet-Pan Sausage & Vegetables",
+    "headnote": "Smoked sausage, potatoes and broccoli roasted together until browned at the edges. Easy cleanup.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 30,
+    "tags": ["dinner", "one-pan"],
+    "ingredients": [
+      "1 lb smoked sausage, sliced",
+      "1 lb baby potatoes, halved",
+      "1 head broccoli, cut into florets",
+      "1 red bell pepper, sliced",
+      "1 red onion, sliced",
+      "3 tbsp olive oil",
+      "1 tsp smoked paprika",
+      "½ tsp kosher salt"
+    ],
+    "steps": [
+      "Heat the oven to 425°F.",
+      "Toss the potatoes, broccoli, bell pepper, onion and sausage with the oil, paprika and salt on two sheet pans.",
+      "Roast for 25 to 30 minutes, stirring once, until the potatoes are golden and tender."
+    ]
+  },
+  {
+    "slug": "beef-and-broccoli",
+    "title": "Beef & Broccoli Stir-Fry",
+    "headnote": "Tender sliced steak and crisp broccoli in a glossy ginger-garlic sauce. Whisk the sauce ahead and dinner is fast.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["dinner", "dairy-free", "high-protein", "quick"],
+    "ingredients": [
+      "1 lb flank steak, thinly sliced",
+      "1 lb broccoli florets",
+      "4 cloves garlic, minced",
+      "1 tbsp fresh ginger, minced",
+      "¼ cup soy sauce",
+      "2 tbsp brown sugar",
+      "1 tbsp cornstarch",
+      "¼ cup water",
+      "2 tbsp neutral oil",
+      "1½ cups jasmine rice"
+    ],
+    "steps": [
+      "Cook the rice according to the package directions.",
+      "Whisk the soy sauce, brown sugar, cornstarch and water into a sauce.",
+      "Heat 1 tablespoon of the oil in a large skillet over high heat. Sear the steak in two batches, 2 minutes per batch, and transfer to a plate.",
+      "Add the remaining oil, the garlic, the ginger and the broccoli with 2 tablespoons of water. Cover and steam for 3 minutes.",
+      "Return the steak to the pan, pour in the sauce and cook until glossy, about 1 minute. Serve over the rice."
+    ]
+  },
+  {
+    "slug": "creamy-tomato-soup",
+    "title": "Creamy Tomato Soup",
+    "headnote": "Pantry-friendly tomato soup that blends smooth in minutes. Good with a grilled cheese.",
+    "servings": 4,
+    "prep_minutes": 10,
+    "cook_minutes": 30,
+    "tags": ["lunch", "dinner", "vegetarian", "gluten-free"],
+    "ingredients": [
+      "2 tbsp butter",
+      "1 yellow onion, diced",
+      "3 cloves garlic, minced",
+      "1 (28-oz) can whole peeled tomatoes",
+      "2 cups vegetable broth",
+      "½ cup heavy cream",
+      "1 tsp sugar",
+      "½ tsp kosher salt",
+      "1 small bunch fresh basil"
+    ],
+    "steps": [
+      "Melt the butter in a large pot over medium heat. Cook the onion until soft, about 6 minutes, then add the garlic for 1 minute.",
+      "Add the tomatoes, broth, sugar and salt. Simmer for 20 minutes.",
+      "Blend until smooth with an immersion blender. Stir in the cream and season to taste.",
+      "Serve topped with torn basil."
+    ]
+  }
+]

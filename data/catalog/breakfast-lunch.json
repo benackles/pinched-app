@@ -1,0 +1,266 @@
+[
+  {
+    "slug": "egg-muffins",
+    "title": "Spinach & Pepper Egg Muffins",
+    "headnote": "Grab-and-go egg cups you can bake once and reheat all week. Swap in whatever vegetables are in the fridge.",
+    "servings": 6,
+    "prep_minutes": 10,
+    "cook_minutes": 20,
+    "tags": ["breakfast", "vegetarian", "gluten-free", "make-ahead", "high-protein"],
+    "ingredients": [
+      "10 large eggs",
+      "2 cups baby spinach, chopped",
+      "1 red bell pepper, diced",
+      "½ yellow onion, diced",
+      "1 cup shredded cheddar",
+      "¼ cup milk",
+      "½ tsp kosher salt",
+      "¼ tsp black pepper"
+    ],
+    "steps": [
+      "Heat the oven to 350°F and grease a 12-cup muffin tin.",
+      "Whisk the eggs, milk, salt and pepper in a large bowl.",
+      "Stir in the spinach, bell pepper, onion and cheddar.",
+      "Divide the mixture among the muffin cups and bake for 20 minutes, until set.",
+      "Cool slightly. Refrigerate in an airtight container for up to 4 days."
+    ]
+  },
+  {
+    "slug": "peanut-butter-waffles",
+    "title": "Peanut Butter Waffles with Banana",
+    "headnote": "Crisp, nutty waffles with a soft middle. The dry ingredients can be whisked together ahead of time.",
+    "servings": 4,
+    "prep_minutes": 10,
+    "cook_minutes": 15,
+    "tags": ["breakfast", "vegetarian"],
+    "ingredients": [
+      "2 cups all-purpose flour",
+      "1 tbsp baking powder",
+      "½ tsp kosher salt",
+      "2 large eggs",
+      "1½ cups milk",
+      "½ cup creamy peanut butter",
+      "4 tbsp butter, melted",
+      "2 bananas, sliced"
+    ],
+    "steps": [
+      "Heat a waffle iron.",
+      "Whisk the flour, baking powder and salt in a large bowl.",
+      "Whisk the eggs, milk, peanut butter and melted butter in a second bowl, then fold into the dry ingredients until just combined.",
+      "Cook in the hot waffle iron until golden and crisp.",
+      "Top with the sliced banana."
+    ]
+  },
+  {
+    "slug": "berry-overnight-oats",
+    "title": "Berry Overnight Oats",
+    "headnote": "Four breakfasts in one bowl: stir, portion, chill. They keep for up to four days.",
+    "servings": 4,
+    "prep_minutes": 10,
+    "cook_minutes": 0,
+    "tags": ["breakfast", "vegetarian", "make-ahead", "quick"],
+    "ingredients": [
+      "2 cups rolled oats",
+      "2 cups milk",
+      "1 cup plain Greek yogurt",
+      "2 tbsp chia seeds",
+      "2 tbsp honey",
+      "1 tsp vanilla extract",
+      "2 cups mixed berries"
+    ],
+    "steps": [
+      "Stir the oats, milk, yogurt, chia seeds, honey and vanilla together in a large bowl.",
+      "Divide the mixture among 4 containers.",
+      "Refrigerate overnight.",
+      "Top with the berries just before eating."
+    ]
+  },
+  {
+    "slug": "veggie-breakfast-burritos",
+    "title": "Veggie Breakfast Burritos",
+    "headnote": "Eggs, black beans and peppers rolled up tight. Wrap them individually and reheat from the fridge or freezer.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["breakfast", "vegetarian", "make-ahead"],
+    "ingredients": [
+      "8 large eggs",
+      "1 tbsp olive oil",
+      "1 red bell pepper, diced",
+      "½ yellow onion, diced",
+      "1 (15-oz) can black beans, drained and rinsed",
+      "1 cup shredded cheddar",
+      "4 large flour tortillas",
+      "½ cup salsa",
+      "½ tsp ground cumin",
+      "½ tsp kosher salt"
+    ],
+    "steps": [
+      "Warm the oil in a large skillet over medium heat. Cook the bell pepper and onion until soft, about 6 minutes.",
+      "Add the beans and cumin and cook 2 minutes more.",
+      "Beat the eggs with the salt, pour into the skillet and stir gently until just set.",
+      "Divide the filling among the tortillas, top with the cheddar and salsa, and roll up tightly.",
+      "Wrap each burrito in foil and refrigerate for up to 4 days, or freeze for up to 2 months."
+    ]
+  },
+  {
+    "slug": "sweet-potato-black-bean-hash",
+    "title": "Sweet Potato & Black Bean Hash with Eggs",
+    "headnote": "A one-skillet hash that works for breakfast or dinner. The eggs cook right on top.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 25,
+    "tags": ["breakfast", "dinner", "vegetarian", "gluten-free", "one-pan"],
+    "ingredients": [
+      "2 medium sweet potatoes, peeled and cubed",
+      "1 yellow onion, diced",
+      "1 red bell pepper, diced",
+      "1 (15-oz) can black beans, drained and rinsed",
+      "2 tbsp olive oil",
+      "1 tsp smoked paprika",
+      "½ tsp kosher salt",
+      "4 large eggs",
+      "1 small bunch fresh cilantro, chopped"
+    ],
+    "steps": [
+      "Heat the oil in a large skillet over medium-high heat.",
+      "Cook the sweet potatoes for 10 minutes, stirring occasionally, until browned.",
+      "Add the onion, bell pepper, paprika and salt and cook 6 minutes more.",
+      "Stir in the beans. Make four wells, crack an egg into each, cover and cook 4 minutes.",
+      "Top with the cilantro."
+    ]
+  },
+  {
+    "slug": "chickpea-salad-sandwiches",
+    "title": "Chickpea Salad Sandwiches",
+    "headnote": "Crunchy, lemony and ready in fifteen minutes. The salad keeps for three days, so make a double batch.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 0,
+    "tags": ["lunch", "vegetarian", "quick", "make-ahead"],
+    "ingredients": [
+      "2 (15-oz) cans chickpeas, drained and rinsed",
+      "½ cup plain Greek yogurt",
+      "2 stalks celery, diced",
+      "¼ red onion, finely diced",
+      "1 lemon, juiced",
+      "1 tbsp Dijon mustard",
+      "½ tsp kosher salt",
+      "¼ tsp black pepper",
+      "8 slices whole wheat bread",
+      "2 cups baby spinach"
+    ],
+    "steps": [
+      "Mash the chickpeas roughly with a fork in a large bowl.",
+      "Stir in the yogurt, celery, red onion, lemon juice, mustard, salt and pepper.",
+      "Layer the chickpea salad and spinach between slices of bread."
+    ]
+  },
+  {
+    "slug": "caprese-pasta-salad",
+    "title": "Caprese Pasta Salad",
+    "headnote": "Tomatoes, mozzarella and basil tossed with pasta. It tastes better after a night in the fridge.",
+    "servings": 6,
+    "prep_minutes": 15,
+    "cook_minutes": 10,
+    "tags": ["lunch", "vegetarian", "make-ahead"],
+    "ingredients": [
+      "1 lb rotini pasta",
+      "2 cups cherry tomatoes, halved",
+      "8 oz fresh mozzarella pearls",
+      "1 bunch fresh basil",
+      "3 tbsp extra-virgin olive oil",
+      "2 tbsp balsamic vinegar",
+      "½ tsp kosher salt",
+      "¼ tsp black pepper"
+    ],
+    "steps": [
+      "Cook the pasta in salted boiling water until al dente. Drain and rinse with cold water.",
+      "Whisk the olive oil, balsamic vinegar, salt and pepper into a dressing.",
+      "Toss the pasta with the dressing, tomatoes, mozzarella and torn basil.",
+      "Refrigerate for at least 30 minutes before serving."
+    ]
+  },
+  {
+    "slug": "lentil-vegetable-soup",
+    "title": "Lentil Vegetable Soup",
+    "headnote": "A sturdy, plant-based soup that only gets better on day two. A squeeze of lemon at the end wakes it up.",
+    "servings": 6,
+    "prep_minutes": 15,
+    "cook_minutes": 40,
+    "tags": ["lunch", "dinner", "vegan", "gluten-free", "dairy-free", "make-ahead"],
+    "ingredients": [
+      "2 tbsp olive oil",
+      "1 yellow onion, diced",
+      "3 carrots, diced",
+      "3 stalks celery, diced",
+      "4 cloves garlic, minced",
+      "1½ cups dried brown lentils, rinsed",
+      "1 (14-oz) can diced tomatoes",
+      "6 cups vegetable broth",
+      "1 tsp ground cumin",
+      "1 tsp kosher salt",
+      "4 cups baby spinach",
+      "1 lemon, juiced"
+    ],
+    "steps": [
+      "Warm the oil in a large pot over medium heat. Cook the onion, carrots and celery until soft, about 8 minutes.",
+      "Stir in the garlic and cumin for 1 minute.",
+      "Add the lentils, tomatoes, broth and salt. Bring to a boil, then simmer for 30 minutes, until the lentils are tender.",
+      "Stir in the spinach and lemon juice. Season to taste."
+    ]
+  },
+  {
+    "slug": "vegetable-soup",
+    "title": "Hearty Vegetable Soup",
+    "headnote": "A big pot of vegetables, white beans and greens. It freezes beautifully, so portion what you won't eat this week.",
+    "servings": 6,
+    "prep_minutes": 15,
+    "cook_minutes": 40,
+    "tags": ["lunch", "dinner", "vegan", "gluten-free", "dairy-free", "make-ahead"],
+    "ingredients": [
+      "2 tbsp olive oil",
+      "1 yellow onion, diced",
+      "3 carrots, diced",
+      "3 stalks celery, diced",
+      "3 cloves garlic, minced",
+      "1 (28-oz) can whole peeled tomatoes",
+      "6 cups vegetable broth",
+      "1 (15-oz) can white beans, drained and rinsed",
+      "4 cups baby spinach"
+    ],
+    "steps": [
+      "Heat the oil in a large pot over medium heat. Cook the onion, carrots and celery until soft, about 10 minutes.",
+      "Add the garlic, tomatoes and broth. Simmer for 25 minutes, crushing the tomatoes with a spoon.",
+      "Stir in the white beans and spinach and cook until the spinach wilts. Season to taste."
+    ]
+  },
+  {
+    "slug": "quinoa-black-bean-bowls",
+    "title": "Quinoa Black Bean Bowls",
+    "headnote": "Fluffy quinoa, beans, corn and a bright lime dressing. Pack it cold for lunch.",
+    "servings": 4,
+    "prep_minutes": 15,
+    "cook_minutes": 15,
+    "tags": ["lunch", "vegan", "gluten-free", "dairy-free", "make-ahead"],
+    "ingredients": [
+      "1 cup quinoa, rinsed",
+      "1 (15-oz) can black beans, drained and rinsed",
+      "1½ cups frozen corn, thawed",
+      "1 red bell pepper, diced",
+      "¼ red onion, finely diced",
+      "1 bunch fresh cilantro, chopped",
+      "2 limes, juiced",
+      "2 tbsp olive oil",
+      "1 tsp ground cumin",
+      "½ tsp kosher salt",
+      "1 avocado"
+    ],
+    "steps": [
+      "Cook the quinoa in 2 cups of water until tender and the water is absorbed, about 15 minutes. Fluff with a fork.",
+      "Whisk the lime juice, olive oil, cumin and salt into a dressing.",
+      "Toss the quinoa, beans, corn, bell pepper, red onion and cilantro with the dressing.",
+      "Serve topped with sliced avocado."
+    ]
+  }
+]

@@ -53,9 +53,16 @@ export const metadata: Metadata = {
     siteName: "Pinched",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Pinched — Plan the week. Prep once." }],
+    images: [
+      { url: "/og.png", width: 1200, height: 630, alt: "Pinched — Plan the week. Prep once." },
+    ],
   },
-  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: ["/og.png"] },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {

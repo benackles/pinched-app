@@ -71,7 +71,10 @@ function DropdownMenuLabel({
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn("px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase", className)}
+      className={cn(
+        "px-3 py-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase",
+        className,
+      )}
       {...props}
     />
   );
@@ -82,7 +85,10 @@ function DropdownMenuSeparator({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
   return (
-    <DropdownMenuPrimitive.Separator className={cn("-mx-1.5 my-1.5 h-px bg-border", className)} {...props} />
+    <DropdownMenuPrimitive.Separator
+      className={cn("-mx-1.5 my-1.5 h-px bg-border", className)}
+      {...props}
+    />
   );
 }
 

@@ -614,7 +614,10 @@ function buildRecipeTasks(usages: Usage[]): PrepDraftTask[] {
           `sauce:${recipe.id}:${noun}`,
           {
             kind: "sauce",
-            title: [verb, base, noun].filter(Boolean).join(" "),
+            // "soy sauce" + "sauce" → "Mix soy sauce", not "Mix soy sauce sauce"
+            title: (base.endsWith(noun) ? [verb, base] : [verb, base, noun])
+              .filter(Boolean)
+              .join(" "),
             description: text,
             minutes: 5,
             is_passive: false,
