@@ -47,7 +47,9 @@ export function asAnon<T>(db: Db, fn: Parameters<typeof withRole<T>>[3]) {
 }
 
 /** Runs `fn` and returns the Postgres error it raised (code + message), or null if it succeeded. */
-export async function pgError(fn: () => Promise<unknown>): Promise<{ code?: string; message: string } | null> {
+export async function pgError(
+  fn: () => Promise<unknown>,
+): Promise<{ code?: string; message: string } | null> {
   try {
     await fn();
     return null;

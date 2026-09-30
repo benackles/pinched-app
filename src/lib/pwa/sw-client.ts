@@ -71,7 +71,9 @@ export async function purgeUserCaches(): Promise<void> {
   const worker = await activeWorker();
   worker?.postMessage({ type: "PINCHED_SESSION", userId: null });
   if (typeof caches !== "undefined") {
-    await Promise.all(SW_CACHE_NAMES.filter((n) => n !== "pinched-meta").map((n) => caches.delete(n)));
+    await Promise.all(
+      SW_CACHE_NAMES.filter((n) => n !== "pinched-meta").map((n) => caches.delete(n)),
+    );
   }
 }
 
@@ -106,7 +108,8 @@ export function warmMainRoutes(): void {
       }
     }
   };
-  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number }).requestIdleCallback;
+  const idle = (window as Window & { requestIdleCallback?: (cb: () => void) => number })
+    .requestIdleCallback;
   if (idle) idle(() => void run());
   else setTimeout(() => void run(), 2000);
 }

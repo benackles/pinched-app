@@ -29,7 +29,8 @@ export function isLocalHostname(hostname: string): boolean {
 }
 
 export function shouldRegisterServiceWorker(ctx: RegisterContext): RegisterDecision {
-  if (!ctx.isProductionDeployment) return { register: false, reason: "not a production deployment" };
+  if (!ctx.isProductionDeployment)
+    return { register: false, reason: "not a production deployment" };
   if (ctx.inIframe) return { register: false, reason: "inside an iframe" };
   if (new URLSearchParams(ctx.search).get("sw") === "off") {
     return { register: false, reason: "opted out with ?sw=off" };

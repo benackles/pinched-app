@@ -60,7 +60,9 @@ describe("RLS coverage", () => {
       select table_name from information_schema.columns
       where table_schema = 'public' and column_name = 'user_id'`);
     const covered = new Set(TENANT_TABLES.map((t) => t.table));
-    const missing = rows.map((r) => r.table_name).filter((t) => !covered.has(t) && t !== "push_deliveries");
+    const missing = rows
+      .map((r) => r.table_name)
+      .filter((t) => !covered.has(t) && t !== "push_deliveries");
     expect(missing).toEqual([]);
   });
 
@@ -70,7 +72,10 @@ describe("RLS coverage", () => {
       where n.nspname = 'public' and p.prosecdef`);
     expect(rows.length).toBeGreaterThan(0);
     for (const fn of rows) {
-      expect(fn.proconfig?.some((c) => c.startsWith("search_path=")), fn.proname).toBe(true);
+      expect(
+        fn.proconfig?.some((c) => c.startsWith("search_path=")),
+        fn.proname,
+      ).toBe(true);
     }
   });
 });
@@ -78,7 +83,11 @@ describe("RLS coverage", () => {
 describe.each(TENANT_TABLES)("$table", ({ table, touch }) => {
   it("shows each signed-in user only their own rows (and is never empty)", async () => {
     for (const user of [ALICE, BOB]) {
-      const rows = await asUser(db, user, async (tx) => (await tx.query<{ user_id: string }>(`select user_id from ${table}`)).rows);
+      const rows = await asUser(
+        db,
+        user,
+        async (tx) => (await tx.query<{ user_id: string }>(`select user_id from ${table}`)).rows,
+      );
       expect(rows.length, `${user} should see own rows in ${table}`).toBeGreaterThan(0);
       expect(new Set(rows.map((r) => r.user_id))).toEqual(new Set([user]));
     }
@@ -91,9 +100,9 @@ describe.each(TENANT_TABLES)("$table", ({ table, touch }) => {
 
   it("cannot update another user's rows", async () => {
     const before = await fingerprint(table, BOB);
-    const result = await asUser(db, ALICE, (tx) => tx.query(`update ${table} set ${touch} where user_id = '${BOB}' returning 1`)).catch(
-      (e: { code?: string }) => e,
-    );
+    const result = await asUser(db, ALICE, (tx) =>
+      tx.query(`update ${table} set ${touch} where user_id = '${BOB}' returning 1`),
+    ).catch((e: { code?: string }) => e);
     const denied = "code" in result && result.code === "42501";
     const affected = "rows" in result ? result.rows.length : 0;
     expect(denied || affected === 0).toBe(true);
@@ -102,9 +111,9 @@ describe.each(TENANT_TABLES)("$table", ({ table, touch }) => {
 
   it("cannot delete another user's rows", async () => {
     const before = await fingerprint(table, BOB);
-    const result = await asUser(db, ALICE, (tx) => tx.query(`delete from ${table} where user_id = '${BOB}' returning 1`)).catch(
-      (e: { code?: string }) => e,
-    );
+    const result = await asUser(db, ALICE, (tx) =>
+      tx.query(`delete from ${table} where user_id = '${BOB}' returning 1`),
+    ).catch((e: { code?: string }) => e);
     const denied = "code" in result && result.code === "42501";
     const affected = "rows" in result ? result.rows.length : 0;
     expect(denied || affected === 0).toBe(true);
@@ -153,34 +162,88 @@ describe("spoofed inserts", () => {
     expect(Object.keys(SPOOFED_INSERTS).sort()).toEqual(TENANT_TABLES.map((t) => t.table).sort());
   });
 
-  it.each(Object.entries(SPOOFED_INSERTS))("%s: cannot be created on another user's behalf", async (table, statement) => {
-    const before = await fingerprint(table, BOB);
-    const error = await pgError(() => asUser(db, ALICE, (tx) => tx.query(statement)));
-    expect(error, `${table} should reject the insert`).not.toBeNull();
-    expect(error?.code).toBe("42501");
-    expect(await fingerprint(table, BOB)).toBe(before);
-  });
+  it.each(Object.entries(SPOOFED_INSERTS))(
+    "%s: cannot be created on another user's behalf",
+    async (table, statement) => {
+      const before = await fingerprint(table, BOB);
+      const error = await pgError(() => asUser(db, ALICE, (tx) => tx.query(statement)));
+      expect(error, `${table} should reject the insert`).not.toBeNull();
+      expect(error?.code).toBe("42501");
+      expect(await fingerprint(table, BOB)).toBe(before);
+    },
+  );
 });
 
 describe("cross-tenant foreign keys", () => {
   const cases: [string, string][] = [
-    ["planned_meals → another user's plan", `insert into planned_meals (weekly_plan_id, saved_recipe_id, planned_date, servings) values ('${BOB_PLAN_2}', '${ids.aliceSaved}', '2026-10-06', 2)`],
-    ["planned_meals → another user's saved recipe", `insert into planned_meals (weekly_plan_id, saved_recipe_id, planned_date, servings) values ('${ids.alicePlan}', '${ids.bobSaved}', '2026-09-30', 2)`],
-    ["recipe_notes → another user's saved recipe", `insert into recipe_notes (saved_recipe_id, text) values ('${ids.bobSaved}', 'x')`],
-    ["recipe_modifications → another user's saved recipe", `insert into recipe_modifications (saved_recipe_id, changes) values ('${ids.bobSaved}', '{}')`],
-    ["collection_items → another user's collection", `insert into collection_items (collection_id, saved_recipe_id) values ('${ids.bobCollection}', '${ids.aliceSavedOwn}')`],
-    ["grocery_lists → another user's plan", `insert into grocery_lists (weekly_plan_id) values ('${BOB_PLAN_2}')`],
-    ["grocery_list_items → another user's list", `insert into grocery_list_items (grocery_list_id, name, normalized_name) values ('${ids.bobList}', 'x', 'x')`],
-    ["grocery_item_sources → another user's item", `insert into grocery_item_sources (grocery_list_item_id, planned_meal_id) values ('${ids.bobItem}', '${ids.aliceMeal}')`],
-    ["grocery_item_sources → another user's meal", `insert into grocery_item_sources (grocery_list_item_id, planned_meal_id) values ('${ids.aliceItem}', '${ids.bobMeal}')`],
-    ["prep_plans → another user's plan", `insert into prep_plans (weekly_plan_id) values ('${BOB_PLAN_2}')`],
-    ["prep_tasks → another user's prep plan", `insert into prep_tasks (prep_plan_id, title) values ('${ids.bobPrepPlan}', 'x')`],
-    ["prep_task_meals → another user's meal", `insert into prep_task_meals (prep_task_id, planned_meal_id) values ('${ids.alicePrepTask}', '${ids.bobMeal}')`],
-    ["cooking_events → another user's saved recipe", `insert into cooking_events (saved_recipe_id, rating) values ('${ids.bobSaved}', 4)`],
-    ["ingredients → another user's recipe", `insert into ingredients (recipe_id, name, normalized_name, raw_text) values ('${ids.bobRecipe}', 'x', 'x', 'x')`],
-    ["ingredients → a catalog recipe", `insert into ingredients (recipe_id, name, normalized_name, raw_text) values ('${ids.seededPublished}', 'x', 'x', 'x')`],
-    ["recipe_steps → another user's recipe", `insert into recipe_steps (recipe_id, step_number, instruction) values ('${ids.bobRecipe}', 9, 'x')`],
-    ["recipe_steps → a catalog recipe", `insert into recipe_steps (recipe_id, step_number, instruction) values ('${ids.seededPublished}', 9, 'x')`],
+    [
+      "planned_meals → another user's plan",
+      `insert into planned_meals (weekly_plan_id, saved_recipe_id, planned_date, servings) values ('${BOB_PLAN_2}', '${ids.aliceSaved}', '2026-10-06', 2)`,
+    ],
+    [
+      "planned_meals → another user's saved recipe",
+      `insert into planned_meals (weekly_plan_id, saved_recipe_id, planned_date, servings) values ('${ids.alicePlan}', '${ids.bobSaved}', '2026-09-30', 2)`,
+    ],
+    [
+      "recipe_notes → another user's saved recipe",
+      `insert into recipe_notes (saved_recipe_id, text) values ('${ids.bobSaved}', 'x')`,
+    ],
+    [
+      "recipe_modifications → another user's saved recipe",
+      `insert into recipe_modifications (saved_recipe_id, changes) values ('${ids.bobSaved}', '{}')`,
+    ],
+    [
+      "collection_items → another user's collection",
+      `insert into collection_items (collection_id, saved_recipe_id) values ('${ids.bobCollection}', '${ids.aliceSavedOwn}')`,
+    ],
+    [
+      "grocery_lists → another user's plan",
+      `insert into grocery_lists (weekly_plan_id) values ('${BOB_PLAN_2}')`,
+    ],
+    [
+      "grocery_list_items → another user's list",
+      `insert into grocery_list_items (grocery_list_id, name, normalized_name) values ('${ids.bobList}', 'x', 'x')`,
+    ],
+    [
+      "grocery_item_sources → another user's item",
+      `insert into grocery_item_sources (grocery_list_item_id, planned_meal_id) values ('${ids.bobItem}', '${ids.aliceMeal}')`,
+    ],
+    [
+      "grocery_item_sources → another user's meal",
+      `insert into grocery_item_sources (grocery_list_item_id, planned_meal_id) values ('${ids.aliceItem}', '${ids.bobMeal}')`,
+    ],
+    [
+      "prep_plans → another user's plan",
+      `insert into prep_plans (weekly_plan_id) values ('${BOB_PLAN_2}')`,
+    ],
+    [
+      "prep_tasks → another user's prep plan",
+      `insert into prep_tasks (prep_plan_id, title) values ('${ids.bobPrepPlan}', 'x')`,
+    ],
+    [
+      "prep_task_meals → another user's meal",
+      `insert into prep_task_meals (prep_task_id, planned_meal_id) values ('${ids.alicePrepTask}', '${ids.bobMeal}')`,
+    ],
+    [
+      "cooking_events → another user's saved recipe",
+      `insert into cooking_events (saved_recipe_id, rating) values ('${ids.bobSaved}', 4)`,
+    ],
+    [
+      "ingredients → another user's recipe",
+      `insert into ingredients (recipe_id, name, normalized_name, raw_text) values ('${ids.bobRecipe}', 'x', 'x', 'x')`,
+    ],
+    [
+      "ingredients → a catalog recipe",
+      `insert into ingredients (recipe_id, name, normalized_name, raw_text) values ('${ids.seededPublished}', 'x', 'x', 'x')`,
+    ],
+    [
+      "recipe_steps → another user's recipe",
+      `insert into recipe_steps (recipe_id, step_number, instruction) values ('${ids.bobRecipe}', 9, 'x')`,
+    ],
+    [
+      "recipe_steps → a catalog recipe",
+      `insert into recipe_steps (recipe_id, step_number, instruction) values ('${ids.seededPublished}', 9, 'x')`,
+    ],
   ];
 
   it.each(cases)("%s is rejected even with the caller's own user_id", async (_name, statement) => {
