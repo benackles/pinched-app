@@ -168,7 +168,7 @@ export function RemindersCard({
       >
         <p className="rounded-xl bg-secondary p-4 text-sm">
           Push reminders are part of Pinched Pro.{" "}
-          <a href="#billing" className="font-semibold text-primary-strong underline">
+          <a href="#billing" className="font-semibold text-foreground underline underline-offset-2">
             See Pro
           </a>
         </p>

@@ -7,9 +7,9 @@ type Workers = { recipeSite: { url: string } };
 /** Playwright's `test`, plus a local recipe website for URL-import tests. */
 export const test = base.extend<object, Workers>({
   recipeSite: [
-    async ({}, use) => {
+    async ({}, provide) => {
       const site = await startRecipeSite();
-      await use({ url: site.url });
+      await provide({ url: site.url });
       await site.close();
     },
     { scope: "worker" },

@@ -47,6 +47,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // The build checks the app; tests, scripts and Edge Functions are checked by `pnpm typecheck`.
+  typescript: { tsconfigPath: "tsconfig.build.json" },
   poweredByHeader: false,
   typedRoutes: true,
   // Acknowledge Turbopack for `next dev`; production builds use webpack (Serwist requires it).

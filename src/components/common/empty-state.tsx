@@ -12,7 +12,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("rounded-2xl bg-card p-8 text-center shadow-card md:p-10", className)}>
-      {title && <p className="font-display text-2xl">{title}</p>}
+      {title && <h2 className="font-display text-2xl">{title}</h2>}
       {children && <div className={cn("text-muted-foreground", title && "mt-1")}>{children}</div>}
     </div>
   );

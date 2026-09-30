@@ -1,6 +1,15 @@
 "use client";
 
-import { Check, ChefHat, Clock, Minus, MoreHorizontal, Plus, Users } from "lucide-react";
+import {
+  CalendarDays,
+  Check,
+  ChefHat,
+  Clock,
+  Minus,
+  MoreHorizontal,
+  Plus,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -11,8 +20,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOnline } from "@/hooks/use-online";
@@ -103,18 +114,20 @@ export function MealCard({ meal, moveTargets }: { meal: MealCardData; moveTarget
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>Move to</DropdownMenuLabel>
-              {moveTargets
-                .filter((d) => d.value !== meal.date)
-                .map((d) => (
-                  <DropdownMenuItem
-                    key={d.value}
-                    disabled={!online}
-                    onSelect={() => move(d.value, d.label)}
-                  >
-                    {d.label}
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger disabled={!online}>
+                  <CalendarDays aria-hidden /> Move to
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  {moveTargets
+                    .filter((d) => d.value !== meal.date)
+                    .map((d) => (
+                      <DropdownMenuItem key={d.value} onSelect={() => move(d.value, d.label)}>
+                        {d.label}
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive" disabled={!online} onSelect={remove}>
                 Remove from week

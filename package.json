@@ -2,7 +2,7 @@
   "name": "pinched-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Pinched — plan the week, shop for the gap, prep once, cook faster.",
+  "description": "Pinched \u2014 plan the week, shop for the gap, prep once, cook faster.",
   "engines": {
     "node": ">=20.9.0"
   },
@@ -22,7 +22,8 @@
     "catalog:build": "tsx scripts/build-catalog.ts",
     "assets:icons": "tsx scripts/generate-icons.ts",
     "assets:recipe-art": "tsx scripts/generate-recipe-art.ts",
-    "vapid:keys": "tsx scripts/generate-vapid-keys.ts"
+    "vapid:keys": "tsx scripts/generate-vapid-keys.ts",
+    "build:e2e": "NEXT_PUBLIC_PWA_ALLOW_LOCALHOST=1 NEXT_PUBLIC_APP_URL=http://localhost:3200 next build --webpack"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.8",

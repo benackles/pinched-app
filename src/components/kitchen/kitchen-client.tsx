@@ -43,16 +43,22 @@ export type KitchenRow = {
 
 export function QuickAdd({ location }: { location: KitchenLocation }) {
   const [text, setText] = useState("");
-  const [pending, start] = useTransition();
+  const [, start] = useTransition();
   const online = useOnline();
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!text.trim()) return;
+    const entered = text.trim();
+    if (!entered) return;
+    // Ready for the next item straight away — people add a dozen in a row. If this one fails it
+    // goes back in the box (unless they have already started typing something else).
+    setText("");
     start(async () => {
-      const done = unwrap(await quickAddKitchen({ text, location }));
-      if (!done) return;
-      setText("");
+      const done = unwrap(await quickAddKitchen({ text: entered, location }));
+      if (!done) {
+        setText((current) => current || entered);
+        return;
+      }
       const { names, added, merged, had } = done.data;
       toast.success(
         names.length === 1
@@ -83,7 +89,8 @@ export function QuickAdd({ location }: { location: KitchenLocation }) {
         type="submit"
         size="lg"
         aria-label="Add"
-        disabled={!online || pending || !text.trim()}
+        // Not disabled while saving: a disabled submit button also blocks Enter, so typing the next item would do nothing.
+        disabled={!online || !text.trim()}
       >
         <Plus />
       </Button>

@@ -161,7 +161,10 @@ export function RecipePhotos({
         <p id="photo-limit" className="rounded-2xl bg-secondary p-4 text-sm">
           Free accounts can add {limit === 1 ? "one photo or video" : `${limit} photos or videos`}{" "}
           per recipe.{" "}
-          <Link href="/settings#billing" className="font-semibold text-primary-strong underline">
+          <Link
+            href="/settings#billing"
+            className="font-semibold text-foreground underline underline-offset-2"
+          >
             Pinched Pro has no limit.
           </Link>
         </p>

@@ -2,13 +2,17 @@
 
 import * as React from "react";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const DropdownMenu = DropdownMenuPrimitive.Root;
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
+const DropdownMenuSub = DropdownMenuPrimitive.Sub;
+
+const panel =
+  "z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-44 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-lift data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2";
 
 function DropdownMenuContent({
   className,
@@ -20,11 +24,7 @@ function DropdownMenuContent({
       <DropdownMenuPrimitive.Content
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
-        className={cn(
-          "z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-44 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-2xl border bg-popover p-1.5 text-popover-foreground shadow-lift",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
-          className,
-        )}
+        className={cn(panel, className)}
         {...props}
       />
     </DropdownMenuPrimitive.Portal>
@@ -45,6 +45,40 @@ function DropdownMenuItem({
       className={cn(itemBase, destructive && "text-destructive", className)}
       {...props}
     />
+  );
+}
+
+/** A menu inside a menu — keeps long lists (like the days of the week) off the main menu. */
+function DropdownMenuSubTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubTrigger>) {
+  return (
+    <DropdownMenuPrimitive.SubTrigger
+      data-slot="dropdown-menu-sub-trigger"
+      className={cn(itemBase, "data-[state=open]:bg-secondary", className)}
+      {...props}
+    >
+      {children}
+      <ChevronRight className="ml-auto" aria-hidden />
+    </DropdownMenuPrimitive.SubTrigger>
+  );
+}
+
+function DropdownMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.SubContent>) {
+  return (
+    <DropdownMenuPrimitive.Portal>
+      <DropdownMenuPrimitive.SubContent
+        data-slot="dropdown-menu-sub-content"
+        sideOffset={4}
+        className={cn(panel, className)}
+        {...props}
+      />
+    </DropdownMenuPrimitive.Portal>
   );
 }
 
@@ -101,4 +135,7 @@ export {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuGroup,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 };

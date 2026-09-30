@@ -71,6 +71,84 @@ const isCacheablePage = ({
   !NEVER_CACHE.test(url.pathname) &&
   (request.mode === "navigate" || request.headers.get("x-pinched-warm") === "1");
 
+/** Where the worker remembers whose pages it is holding (see "Per-user cache hygiene" below). */
+const SESSION_KEY = "/__pinched/session";
+
+async function hasSession(): Promise<boolean> {
+  return (await (await caches.open(CACHE.meta)).match(SESSION_KEY)) !== undefined;
+}
+
+/**
+ * Nothing is stored for anyone who isn't signed in: a person's screens are only written to the
+ * caches while the worker knows whose session it is. That also closes a race on sign-out, where a
+ * request still in flight could otherwise write a page back just after the purge.
+ */
+const onlyWhileSignedIn = {
+  cacheWillUpdate: async ({ response }: { response: Response }) =>
+    (await hasSession()) ? response : null,
+};
+
+/** The cached HTML of each screen — what opens when the app is launched with no signal. */
+const pagesStrategy = new NetworkFirst({
+  cacheName: CACHE.pages,
+  networkTimeoutSeconds: SW_TIMEOUT_SECONDS,
+  plugins: [
+    new CacheableResponsePlugin({ statuses: [200] }),
+    onlyWhileSignedIn,
+    new ExpirationPlugin({ maxEntries: 50, purgeOnQuotaError: true }),
+  ],
+});
+
+// The app renders on the server, so a screen's cached HTML is only as fresh as the last time it was
+// fetched as a document. People mostly move around by client-side navigation and save changes through
+// Server Actions, neither of which refetches the HTML. So whenever the app talks to the server about
+// a screen (a navigation's data, a saved change), the screen's HTML is refreshed a moment later —
+// debounced, so a burst of check-offs costs one refresh — and launching offline shows where they left off.
+const REFRESH_DELAY_MS = 1500;
+const pendingRefresh = new Map<
+  string,
+  { timer: ReturnType<typeof setTimeout>; done: () => void }
+>();
+
+/** The same screen always has the same key: Next's per-request `_rsc` marker is dropped. */
+function screenKey(input: string): string | null {
+  const url = new URL(input, self.location.origin);
+  if (url.origin !== self.location.origin || NEVER_CACHE.test(url.pathname)) return null;
+  url.searchParams.delete("_rsc");
+  return url.pathname + url.search;
+}
+
+function refreshScreen(input: string, event: ExtendableEvent) {
+  const key = screenKey(input);
+  if (!key) return;
+  const earlier = pendingRefresh.get(key);
+  if (earlier) {
+    clearTimeout(earlier.timer);
+    earlier.done();
+  }
+  event.waitUntil(
+    new Promise<void>((resolve) => {
+      const timer = setTimeout(async () => {
+        pendingRefresh.delete(key);
+        try {
+          if (!(await hasSession())) return resolve();
+          const request = new Request(key, {
+            credentials: "same-origin",
+            // A redirect (signed out → /sign-in) must not be stored as if it were the screen.
+            redirect: "manual",
+            headers: { "x-pinched-warm": "1" },
+          });
+          await pagesStrategy.handle({ request, event });
+        } catch {
+          // offline, or the server is unreachable: keep the copy we have
+        }
+        resolve();
+      }, REFRESH_DELAY_MS);
+      pendingRefresh.set(key, { timer, done: resolve });
+    }),
+  );
+}
+
 const runtimeCaching: RuntimeCaching[] = [
   // Auth, import, Stripe and every other API route: always the network, never stored. The one
   // exception is local demo mode's media route, which stands in for Supabase Storage below.
@@ -80,14 +158,21 @@ const runtimeCaching: RuntimeCaching[] = [
     handler: new NetworkOnly(),
   },
   // Page navigations (and the post-login route warm-up): fresh online, cached copy with no signal.
+  { matcher: isCacheablePage, handler: pagesStrategy },
+  // A saved change (a Server Action posts to the screen it was made on): afterwards, refresh that
+  // screen's cached HTML. Otherwise the request is untouched — the worker only listens.
   {
-    matcher: isCacheablePage,
-    handler: new NetworkFirst({
-      cacheName: CACHE.pages,
-      networkTimeoutSeconds: SW_TIMEOUT_SECONDS,
+    matcher: ({ request, sameOrigin }) =>
+      sameOrigin && request.method === "POST" && request.headers.has("Next-Action"),
+    method: "POST",
+    handler: new NetworkOnly({
       plugins: [
-        new CacheableResponsePlugin({ statuses: [200] }),
-        new ExpirationPlugin({ maxEntries: 50, purgeOnQuotaError: true }),
+        {
+          fetchDidSucceed: async ({ request, response, event }) => {
+            if (response.ok) refreshScreen(request.url, event);
+            return response;
+          },
+        },
       ],
     }),
   },
@@ -103,7 +188,15 @@ const runtimeCaching: RuntimeCaching[] = [
       networkTimeoutSeconds: SW_TIMEOUT_SECONDS,
       plugins: [
         new CacheableResponsePlugin({ statuses: [200] }),
+        onlyWhileSignedIn,
         new ExpirationPlugin({ maxEntries: 50, purgeOnQuotaError: true }),
+        {
+          // A client-side navigation (or refresh) just fetched this screen's data: keep its HTML fresh too.
+          fetchDidSucceed: async ({ request, response, event }) => {
+            if (response.ok) refreshScreen(request.url, event);
+            return response;
+          },
+        },
       ],
     }),
   },
@@ -179,12 +272,18 @@ serwist.addEventListeners();
 // signed-in user changes or signs out, so a shared phone never shows the previous account.
 
 async function clearUserCaches() {
+  // Screens waiting to be refreshed belong to the person who is leaving.
+  for (const { timer, done } of pendingRefresh.values()) {
+    clearTimeout(timer);
+    done();
+  }
+  pendingRefresh.clear();
   await Promise.all(USER_SCOPED_CACHES.map((name) => caches.delete(name)));
 }
 
 async function syncSession(userId: string | null) {
   const meta = await caches.open(CACHE.meta);
-  const key = new Request("/__pinched/session");
+  const key = new Request(SESSION_KEY);
   const previous = await meta.match(key).then((r) => r?.text());
   if (userId === null) {
     await clearUserCaches();

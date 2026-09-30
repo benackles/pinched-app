@@ -5,6 +5,8 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /**
+ * Filled buttons darken on hover (mixing toward black) rather than fade: a lighter fill under white
+ * text drops below AA contrast, and a pointer resting on a button is a real state to design for.
  * Buttons and nav are fully rounded. Sizes stay compact for mouse users and grow to the
  * 44px minimum tap target on touch devices (`pointer-coarse`).
  */
@@ -13,13 +15,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary-strong text-primary-foreground shadow-sm hover:bg-primary-strong/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        default:
+          "bg-primary-strong text-primary-foreground shadow-sm hover:bg-[color-mix(in_oklab,var(--color-primary-strong),black_12%)]",
+        destructive:
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-[color-mix(in_oklab,var(--color-destructive),black_12%)]",
         outline: "border border-input bg-card text-foreground hover:bg-secondary",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
         ghost: "text-foreground hover:bg-secondary",
         link: "text-primary-strong underline-offset-4 hover:underline",
-        success: "bg-success-strong text-success-foreground shadow-sm hover:bg-success-strong/90",
+        success:
+          "bg-success-strong text-success-foreground shadow-sm hover:bg-[color-mix(in_oklab,var(--color-success-strong),black_12%)]",
         soft: "bg-accent text-accent-foreground hover:bg-accent/70",
       },
       size: {

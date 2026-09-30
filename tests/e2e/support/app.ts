@@ -25,9 +25,14 @@ export async function saveCatalogRecipe(page: Page, title: string) {
   await expect(page.getByText("Saved to My Recipes").first()).toBeVisible();
 }
 
-/** Adds a recipe to the nth day (0 = Monday) of the week shown on /plan. */
-export async function addMealOnDay(page: Page, dayIndex: number, title: string) {
-  await page.goto("/plan");
+/** Adds a recipe to the nth day (0 = Monday) of the week shown on /plan (or of `weekStart`'s week). */
+export async function addMealOnDay(
+  page: Page,
+  dayIndex: number,
+  title: string,
+  weekStart?: string,
+) {
+  await page.goto(weekStart ? `/plan?week=${weekStart}` : "/plan");
   // One "Add meal to this day" button per day; the page header's "Add Meal" has a different name.
   await page
     .getByRole("button", { name: /Add meal to this day/ })

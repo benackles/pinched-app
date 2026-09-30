@@ -81,6 +81,7 @@ test("the whole week: recipes → kitchen → plan → grocery → prep → cook
     await expect(card.locator("span[aria-live=polite]")).toHaveText("5");
 
     await page.getByRole("button", { name: `Options for ${RECIPES.curry}` }).click();
+    await page.getByRole("menuitem", { name: "Move to" }).click();
     await page.getByRole("menuitem", { name: /Saturday/ }).click();
     await expect(daySection(page, "Saturday")).toContainText(RECIPES.curry);
     await expect(daySection(page, "Friday")).not.toContainText(RECIPES.curry);
