@@ -26,6 +26,41 @@ The walkthrough the PRD calls the acceptance flow — sign up, import a recipe b
 add, plan four meals, grocery list, offline check-offs, prep plan, cook and rate — runs as an
 automated test (`tests/e2e/acceptance.spec.ts`).
 
+## Develop locally
+
+Everything runs on your own machine; no cloud environment is needed.
+
+**You need** Node 22 (`.nvmrc`; 20.9+ works) and pnpm 10 (`corepack enable` picks the version pinned
+in `package.json`). Optional: [Deno](https://deno.com) and OpenSSL, which let the tests run the real
+Edge Functions (those tests are skipped without them), and `pnpm exec playwright install chromium`
+for the browser tests.
+
+```bash
+git clone https://github.com/benackles/pinched-app && cd pinched-app
+pnpm install
+pnpm dev:local          # http://localhost:3000 — sign in with any email
+```
+
+| Command                                           | What it does                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev:local`                                  | the app in local demo mode, with hot reload                                                                   |
+| `pnpm check`                                      | format, lint, types and the ~700 unit and database tests — what CI's first job runs; run it before you commit |
+| `pnpm test:watch`                                 | the unit tests in watch mode                                                                                  |
+| `pnpm test:e2e`                                   | the browser tests, phone and desktop (starts its own server)                                                  |
+| `pnpm build:e2e`, then `E2E_PROD=1 pnpm test:e2e` | the same against a production build, which also runs the offline and service-worker specs                     |
+| `pnpm db:generate`                                | after changing `src/db/schema.ts`: writes the migration (CI fails if you forget)                              |
+
+Local data lives in `.pinched-local/` (git-ignored); delete the folder to start over. The scripts use
+`cross-env`, so they should also run in PowerShell; the project is developed and tested on Linux, and
+WSL2 is the smoothest way to run it on Windows.
+
+**Using Claude Code here.** Open the folder in Claude Code (terminal, desktop app or IDE). It reads
+`CLAUDE.md` → `AGENTS.md` for the project's rules, commands and gotchas. `claude remote-control` in the
+folder lets you drive that session from the Claude Code app.
+
+**Real services later.** Copy `.env.example` to `.env.local` and fill in Clerk, Supabase and Stripe
+(see Configuration and Deploying below). None of it is needed to run locally.
+
 ## What's in it
 
 | Area         | What it does                                                                                                                                                                                                                                    |

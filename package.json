@@ -2,20 +2,21 @@
   "name": "pinched-app",
   "version": "0.1.0",
   "private": true,
-  "description": "Pinched \u2014 plan the week, shop for the gap, prep once, cook faster.",
+  "description": "Pinched — plan the week, shop for the gap, prep once, cook faster.",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20.9.0"
   },
   "scripts": {
     "dev": "next dev",
-    "dev:local": "PINCHED_LOCAL=1 next dev",
+    "dev:local": "cross-env PINCHED_LOCAL=1 next dev",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -24,7 +25,7 @@
     "assets:icons": "tsx scripts/generate-icons.ts",
     "assets:recipe-art": "tsx scripts/generate-recipe-art.ts",
     "vapid:keys": "tsx scripts/generate-vapid-keys.ts",
-    "build:e2e": "NEXT_PUBLIC_PWA_ALLOW_LOCALHOST=1 NEXT_PUBLIC_APP_URL=http://localhost:3200 next build --webpack"
+    "build:e2e": "cross-env NEXT_PUBLIC_PWA_ALLOW_LOCALHOST=1 NEXT_PUBLIC_APP_URL=http://localhost:3200 next build --webpack"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.8",
@@ -57,6 +58,7 @@
     "@types/node": "^22.19.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.8",

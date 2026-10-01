@@ -20,12 +20,24 @@ the original, a migration for every schema change.
 
 ```bash
 pnpm dev:local                 # whole app, no credentials (PGlite + real migrations/RLS); sign in with any email
+pnpm check                     # format:check + lint + typecheck + test — what CI's first job runs; run before committing
 pnpm test                      # vitest: domain logic, every migration and RLS rule, webhooks, reminder job
 pnpm typecheck && pnpm lint && pnpm format:check
 pnpm test:e2e                  # Playwright (phone + desktop); E2E_PROD=1 after `pnpm build:e2e` adds the offline specs
 pnpm db:generate               # schema.ts → a new migration;  `drizzle-kit generate --custom --name=x` for hand-written SQL
 pnpm catalog:build [--check]   # data/catalog/*.json → supabase/seed.sql
 ```
+
+Optional tools: `deno` + `openssl` run the Edge Function tests (skipped without them; `DENO_BIN=/path`
+to point at one); `E2E_CHROMIUM_PATH=/path` uses an existing Chromium instead of `playwright install`.
+
+## Where things stand
+
+The PRD's MVP is implemented and tested (about 700 unit/database/RLS tests; Playwright on phone and
+desktop, including the acceptance flow, offline behaviour and an axe accessibility scan). What is **not**
+verified against real services is listed in README → "Known gaps and next steps": live Stripe Checkout
+and portal, Clerk + Supabase third-party auth, push delivery through a real browser push service, and
+the orphaned-upload sweep on hosted Storage. The seeded catalog is 33 recipes, none marked `reviewed`.
 
 ## Where things live
 
