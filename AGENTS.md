@@ -31,6 +31,12 @@ pnpm catalog:build [--check]   # data/catalog/*.json → supabase/seed.sql
 Optional tools: `deno` + `openssl` run the Edge Function tests (skipped without them; `DENO_BIN=/path`
 to point at one); `E2E_CHROMIUM_PATH=/path` uses an existing Chromium instead of `playwright install`.
 
+## How it ships
+
+Local → GitHub → Vercel (Production from `main`, a Preview per branch); Supabase and its Edge
+Functions are separate. The guide, with the env vars per environment, is `docs/deploying.md`. Never set
+`PINCHED_LOCAL` on Vercel (it is refused there), and give a secret a `NEXT_PUBLIC_` name never.
+
 ## Where things stand
 
 The PRD's MVP is implemented and tested (about 700 unit/database/RLS tests; Playwright on phone and

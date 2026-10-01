@@ -6,6 +6,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/pwa/pwa-register";
 import { isClerkConfigured } from "@/lib/auth/config";
+import { appUrl } from "@/server/env";
 
 // Self-hosted variable fonts (OFL). next/font bundles them at build time, so they are part of the
 // precached build output and render offline with no fallback flash.
@@ -26,13 +27,12 @@ const figtree = localFont({
   fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const TITLE = "Pinched — Plan the week. Prep once. Cook faster.";
 const DESCRIPTION =
   "Pinched turns your own recipes into one grocery list of only what you're missing, and one prep session for the whole week.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(APP_URL),
+  metadataBase: new URL(appUrl()),
   title: { default: TITLE, template: "%s — Pinched" },
   description: DESCRIPTION,
   applicationName: "Pinched",

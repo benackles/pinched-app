@@ -30,7 +30,7 @@ automated test (`tests/e2e/acceptance.spec.ts`).
 
 Everything runs on your own machine; no cloud environment is needed.
 
-**You need** Node 22 (`.nvmrc`; 20.9+ works) and pnpm 10 (`corepack enable` picks the version pinned
+**You need** Node 22 (`.nvmrc`; it is what CI and Vercel run) and pnpm 10 (`corepack enable` picks the version pinned
 in `package.json`). Optional: [Deno](https://deno.com) and OpenSSL, which let the tests run the real
 Edge Functions (those tests are skipped without them), and `pnpm exec playwright install chromium`
 for the browser tests.
@@ -138,6 +138,12 @@ Copy `.env.example` to `.env.local`. Every variable is documented there; in shor
 
 ## Deploying
 
+Local → GitHub → Vercel: work on a branch, open a pull request (CI runs and Vercel builds a Preview),
+merge to `main` (Vercel deploys Production). Supabase — the database, storage and Edge Functions — is
+separate and changes with the Supabase CLI. **The full guide, with the setup order, the environment
+variables for each Vercel environment and how to change the database safely, is
+[docs/deploying.md](docs/deploying.md).** In short:
+
 1. **Supabase.** Create a project. `supabase link`, then `supabase db push` (schema, RLS, storage
    bucket). Seed the catalog (see below). Authentication → Third-Party Auth → add **Clerk**.
 2. **Clerk.** Enable Email and Google. Integrations → **Supabase** (so the session token carries the
@@ -147,8 +153,9 @@ Copy `.env.example` to `.env.local`. Every variable is documented there; in shor
    `https://<domain>/api/webhooks/stripe` for `checkout.session.completed`,
    `customer.subscription.created|updated|deleted`, `invoice.payment_failed`. Configure the Customer
    Portal.
-4. **Vercel.** Import the repo, set the environment variables above. The service worker registers
-   only on the production domain (`NEXT_PUBLIC_APP_URL`), never on preview deployments.
+4. **Vercel.** Import the repo (Next.js is detected; Node 22 comes from `engines`) and add the
+   environment variables from the guide before the first deploy. The service worker registers only on
+   the production deployment (and on `NEXT_PUBLIC_APP_URL`'s host, when set), never on previews.
 5. **Reminders.** `pnpm vapid:keys`, then follow `supabase/functions/send-reminders/README.md`
    (deploy the function, set secrets, run `supabase/cron/send-reminders.sql`).
 6. **Cleanup.** Follow `supabase/functions/cleanup-media/README.md` (one secret, deploy, run
@@ -222,6 +229,9 @@ that were never attached to a recipe.
 ## Known gaps and next steps
 
 - **Catalog**: 33 unreviewed recipes vs. the 150–300 launch target (above).
+- **No real deployment yet.** A Vercel-style production build (Clerk-format keys, Vercel's system
+  variables) builds and answers correctly, and CI runs the browser suite on a production build, but the
+  first deploy to Vercel itself — Clerk's hosted pieces, webhooks reaching a public URL — is untested.
 - **Stripe Checkout and the billing portal** were exercised through the webhook tests and the demo
   switch, not against live Stripe — run the acceptance flow's step 10 in test mode before launch.
 - **Clerk + Supabase Third-Party Auth** was developed against the local backend that mimics the same

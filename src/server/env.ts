@@ -39,6 +39,18 @@ export function supabaseServiceKey(): string {
   );
 }
 
+/**
+ * Where the app lives, for links that leave it (Stripe's return URLs) and absolute URLs in page
+ * metadata. An explicit NEXT_PUBLIC_APP_URL always wins. Without one, on Vercel: the project's
+ * production domain for the production deployment, and the deployment's own address for a preview —
+ * so a preview deployment works with no per-environment setup. Elsewhere: localhost.
+ */
 export function appUrl(): string {
-  return (read("NEXT_PUBLIC_APP_URL") ?? "http://localhost:3000").replace(/\/$/, "");
+  const explicit = read("NEXT_PUBLIC_APP_URL");
+  if (explicit) return explicit.replace(/\/$/, "");
+  const host =
+    process.env.VERCEL_ENV === "production"
+      ? read("VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_URL")
+      : read("VERCEL_URL");
+  return host ? `https://${host}` : "http://localhost:3000";
 }
