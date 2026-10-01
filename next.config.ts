@@ -31,8 +31,10 @@ const withSerwist = withSerwistInit({
   // force-reload the page when connectivity returns (people are mid-shop or mid-prep).
   register: false,
   reloadOnOnline: false,
-  // Pages opened via client-side navigation are cached too, so they open with no signal.
-  cacheOnNavigation: true,
+  // Off on purpose. That helper stores each page you navigate to from a worker of its own, with no
+  // check on who is signed in — so it could write a screen back after sign-out's purge. Our worker
+  // refreshes the cached copy of every screen you open, behind the session gate (src/app/sw.ts).
+  cacheOnNavigation: false,
   disable: process.env.NODE_ENV === "development",
   maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
   additionalPrecacheEntries: [{ url: "/~offline", revision }],

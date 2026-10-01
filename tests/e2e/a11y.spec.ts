@@ -18,6 +18,9 @@ async function scan(page: Page, name: string, options: { overlay?: boolean } = {
   // The title streams in after the content on client-side navigations; wait for it so the audit
   // judges the finished page.
   await expect(page).toHaveTitle(/\S/);
+  // A dialog or menu that is closing still hides the page for a moment (Radix marks what it hides
+  // with data-aria-hidden); a scan that lands in that moment would judge a state nobody sees.
+  if (!options.overlay) await expect(page.locator("[data-aria-hidden]")).toHaveCount(0);
   const builder = new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .exclude("nextjs-portal"); // the development overlay, not our UI

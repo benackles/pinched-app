@@ -34,8 +34,8 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 /**
- * Cache names. "pages" and "pages-rsc" match the names @serwist/next's cacheOnNavigation
- * helper writes to, so pages opened through client-side navigation are found offline too.
+ * Cache names. Every write to the user-scoped ones below goes through `onlyWhileSignedIn`, which is
+ * why @serwist/next's cacheOnNavigation helper (it writes "pages" from the page, ungated) is off.
  */
 const CACHE = {
   pages: "pages",
@@ -286,8 +286,10 @@ async function syncSession(userId: string | null) {
   const key = new Request(SESSION_KEY);
   const previous = await meta.match(key).then((r) => r?.text());
   if (userId === null) {
-    await clearUserCaches();
+    // The marker goes first: a page already on its way is then refused instead of written back
+    // after the purge (see onlyWhileSignedIn).
     await meta.delete(key);
+    await clearUserCaches();
     return;
   }
   if (previous !== undefined && previous !== userId) await clearUserCaches();

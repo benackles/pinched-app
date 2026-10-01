@@ -7,6 +7,11 @@ import { authMode } from "@/lib/auth/config";
 import { requireSession } from "@/server/auth";
 import { getProfile } from "@/server/profile";
 
+// Every screen in here belongs to a signed-in person, so none is ever prerendered. Without this, a
+// page that reads no `searchParams` (Settings, New recipe) is built statically — and a build that has
+// no sign-in configured would bake the redirect to /sign-in into it for everyone.
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
   const profile = await getProfile();
