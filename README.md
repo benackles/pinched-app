@@ -28,7 +28,8 @@ automated test (`tests/e2e/acceptance.spec.ts`).
 
 ## Develop locally
 
-Everything runs on your own machine; no cloud environment is needed.
+Everything runs on your own machine; no cloud environment is needed. New to the project? Start with
+[docs/local-development.md](docs/local-development.md): from an empty machine to a first pushed change.
 
 **You need** Node 22 (`.nvmrc`; it is what CI and Vercel run) and pnpm 10 (`corepack enable` picks the version pinned
 in `package.json`). Optional: [Deno](https://deno.com) and OpenSSL, which let the tests run the real
